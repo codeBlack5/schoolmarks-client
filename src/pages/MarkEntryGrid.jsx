@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import client from "../api/client";
 
 export default function MarkEntryGrid() {
@@ -95,9 +95,14 @@ export default function MarkEntryGrid() {
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
-      <h1 className="text-lg font-semibold" style={{ color: "var(--color-navy)" }}>
-        {assessment.name} — Max score: {assessment.max_score}
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-lg font-semibold" style={{ color: "var(--color-navy)" }}>
+          {assessment.name} — Max score: {assessment.max_score}
+        </h1>
+        <Link to={`/assessments/${assessmentId}/edit`} className="text-sm underline" style={{ color: "var(--color-gold)" }}>
+          Edit Assessment Details
+        </Link>
+      </div>
       <p className="text-sm text-slate-500 mb-4">
         Enter scores as marked on paper. Rows already saved are locked — request an edit if a correction is needed.
       </p>

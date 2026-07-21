@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
+import { useAlert } from "../context/AlertContext";
 
 export default function Assignments() {
+  const { confirm, notify } = useAlert();
   const [teachers, setTeachers] = useState([]);
   const [teacherId, setTeacherId] = useState("");
   const [assignments, setAssignments] = useState([]);
@@ -28,11 +30,10 @@ export default function Assignments() {
     e.preventDefault();
     setError("");
     try {
-      await client.post("/teacher_subject_assignments", {
-        teacher_subject_assignment: { user_id: teacherId, subject_id: subjectId },
-      });
+      await client.post("/teacher_subject_assignments", { teacher_subject_assignment: { user_id: teacherId, subject_id: subjectId } });
       setGradeId("");
       setSubjectId("");
+      notify({ type: "success", message: "Subject assigned." });
       loadAssignments(teacherId);
     } catch (err) {
       setError(err.response?.data?.errors?.join(", ") || "Could not create assignment");
@@ -40,12 +41,18 @@ export default function Assignments() {
   }
 
   async function handleRemove(id) {
-    if (!confirm("Remove this subject assignment?")) return;
+    const ok = await confirm({
+      title: "Remove this subject assignment?",
+      confirmText: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await client.delete(`/teacher_subject_assignments/${id}`);
+      notify({ type: "success", message: "Assignment removed." });
       loadAssignments(teacherId);
     } catch (err) {
-      alert(err.response?.data?.error || "Could not remove");
+      notify({ type: "error", message: err.response?.data?.error || "Could not remove" });
     }
   }
 
@@ -54,11 +61,7 @@ export default function Assignments() {
       <h1 className="text-lg font-semibold mb-4" style={{ color: "var(--color-navy)" }}>Teacher Assignments</h1>
 
       <label className="block text-sm font-medium text-slate-700 mb-1">Teacher</label>
-      <select
-        value={teacherId}
-        onChange={(e) => setTeacherId(e.target.value)}
-        className="w-full mb-4 rounded-md border border-slate-300 px-3 py-2 text-sm"
-      >
+      <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="w-full mb-4 rounded-md border border-slate-300 px-3 py-2 text-sm">
         <option value="">Select a teacher...</option>
         {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
       </select>
@@ -66,48 +69,37 @@ export default function Assignments() {
       {teacherId && (
         <>
           <form onSubmit={handleAssign} className="flex flex-col sm:flex-row gap-2 mb-6">
-            <select
-              required
-              value={gradeId}
-              onChange={(e) => { setGradeId(e.target.value); setSubjectId(""); }}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-            >
+            <select required value={gradeId} onChange={(e) => { setGradeId(e.target.value); setSubjectId(""); }} className="rounded-md border border-slate-300 px-3 py-2 text-sm">
               <option value="">Grade...</option>
               {grades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
-            <select
-              required
-              disabled={!gradeId}
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
-            >
+            <select required disabled={!gradeId} value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100">
               <option value="">Subject...</option>
               {subjectsForGrade.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <button className="rounded-md px-4 py-2 text-sm font-medium text-white" style={{ backgroundColor: "var(--color-navy)" }}>
-              Assign
-            </button>
+            <button className="rounded-md px-4 py-2 text-sm font-medium text-white" style={{ backgroundColor: "var(--color-navy)" }}>Assign</button>
           </form>
 
           {error && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>}
 
-          <div className="overflow-x-auto"><table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
-            <thead className="bg-slate-100 text-slate-600 text-left">
-              <tr><th className="px-3 py-2">Grade</th><th className="px-3 py-2">Subject</th><th className="px-3 py-2"></th></tr>
-            </thead>
-            <tbody>
-              {assignments.map((a) => (
-                <tr key={a.id} className="border-t border-slate-100">
-                  <td className="px-3 py-2">{a.subject?.grade?.name}</td>
-                  <td className="px-3 py-2">{a.subject?.name}</td>
-                  <td className="px-3 py-2">
-                    <button onClick={() => handleRemove(a.id)} className="underline text-red-600">Remove</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+              <thead className="bg-slate-100 text-slate-600 text-left">
+                <tr><th className="px-3 py-2">Grade</th><th className="px-3 py-2">Subject</th><th className="px-3 py-2"></th></tr>
+              </thead>
+              <tbody>
+                {assignments.map((a) => (
+                  <tr key={a.id} className="border-t border-slate-100">
+                    <td className="px-3 py-2">{a.subject?.grade?.name}</td>
+                    <td className="px-3 py-2">{a.subject?.name}</td>
+                    <td className="px-3 py-2">
+                      <button onClick={() => handleRemove(a.id)} className="underline text-red-600">Remove</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>
