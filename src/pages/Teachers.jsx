@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
+import { useAlert } from "../context/AlertContext";
 
 export default function Teachers() {
+  const { confirm, notify } = useAlert();
   const [teachers, setTeachers] = useState([]);
   const [form, setForm] = useState({ name: "", email: "", password: "", password_confirmation: "" });
   const [error, setError] = useState("");
@@ -17,6 +19,7 @@ export default function Teachers() {
     try {
       await client.post("/users", { user: { ...form, role: "teacher" } });
       setForm({ name: "", email: "", password: "", password_confirmation: "" });
+      notify({ type: "success", message: `${form.name} added as a teacher.` });
       load();
     } catch (err) {
       setError(err.response?.data?.errors?.join(", ") || "Could not create teacher account");
@@ -24,22 +27,35 @@ export default function Teachers() {
   }
 
   async function handlePromote(id, name) {
-    if (!confirm(`Promote ${name} to admin? They will gain full access to all school data.`)) return;
+    const ok = await confirm({
+      title: `Promote ${name} to admin?`,
+      message: "They will gain full access to all school data.",
+      confirmText: "Promote",
+    });
+    if (!ok) return;
     try {
       await client.patch(`/users/${id}`, { user: { role: "admin" } });
-      load(); // promoted user drops off this teacher-only list, which is expected
+      notify({ type: "success", message: `${name} is now an admin.` });
+      load();
     } catch (err) {
-      alert(err.response?.data?.error || "Could not promote");
+      notify({ type: "error", message: err.response?.data?.error || "Could not promote" });
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm("Delete this teacher account? Their subject assignments will be removed too.")) return;
+  async function handleDelete(id, name) {
+    const ok = await confirm({
+      title: `Delete ${name}'s account?`,
+      message: "Their subject assignments will be removed too. This cannot be undone.",
+      confirmText: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await client.delete(`/users/${id}`);
+      notify({ type: "success", message: "Teacher account deleted." });
       load();
     } catch (err) {
-      alert(err.response?.data?.error || "Could not delete");
+      notify({ type: "error", message: err.response?.data?.error || "Could not delete" });
     }
   }
 
@@ -73,7 +89,7 @@ export default function Teachers() {
                 <td className="px-3 py-2">{t.email}</td>
                 <td className="px-3 py-2 space-x-3 whitespace-nowrap">
                   <button onClick={() => handlePromote(t.id, t.name)} className="underline" style={{ color: "var(--color-gold)" }}>Promote to Admin</button>
-                  <button onClick={() => handleDelete(t.id)} className="underline text-red-600">Delete</button>
+                  <button onClick={() => handleDelete(t.id, t.name)} className="underline text-red-600">Delete</button>
                 </td>
               </tr>
             ))}

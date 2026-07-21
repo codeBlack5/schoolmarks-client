@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -31,7 +31,7 @@ export default function Login() {
         className="bg-white shadow-md rounded-xl p-6 sm:p-8 w-full max-w-sm border border-slate-200"
       >
         <h1 className="text-xl font-semibold mb-1" style={{ color: "var(--color-navy)" }}>
-          SchoolMarks
+          Steelo Analytics
         </h1>
         <p className="text-sm text-slate-500 mb-6">Sign in to enter or review marks</p>
 
@@ -67,6 +67,13 @@ export default function Login() {
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>
+
+        <p className="text-center text-sm text-slate-500 mt-4">
+          New school?{" "}
+          <Link to="/register-school" className="underline" style={{ color: "var(--color-gold)" }}>
+            Register here
+          </Link>
+        </p>
       </form>
     </div>
   );

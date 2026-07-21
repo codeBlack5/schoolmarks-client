@@ -24,7 +24,7 @@ export default function Layout({ children }) {
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
-          <span className="font-semibold text-sm" style={{ color: "var(--color-navy)" }}>SchoolMarks</span>
+          <span className="font-semibold text-sm" style={{ color: "var(--color-navy)" }}>Steelo Analytics</span>
         </header>
 
         <main className="flex-1 min-w-0">{children}</main>

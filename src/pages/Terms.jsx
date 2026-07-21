@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
+import { useAlert } from "../context/AlertContext";
 
 export default function Terms() {
+  const { confirm, notify } = useAlert();
   const [terms, setTerms] = useState([]);
   const [form, setForm] = useState({ name: "", year: "", start_date: "", end_date: "" });
   const [editingId, setEditingId] = useState(null);
@@ -19,6 +21,7 @@ export default function Terms() {
     try {
       await client.post("/terms", { term: form });
       setForm({ name: "", year: "", start_date: "", end_date: "" });
+      notify({ type: "success", message: `${form.name} created.` });
       load();
     } catch (err) {
       setError(err.response?.data?.errors?.join(", ") || "Could not create term");
@@ -34,19 +37,27 @@ export default function Terms() {
     try {
       await client.patch(`/terms/${id}`, { term: editForm });
       setEditingId(null);
+      notify({ type: "success", message: "Term updated." });
       load();
     } catch (err) {
-      alert(err.response?.data?.errors?.join(", ") || "Could not update");
+      notify({ type: "error", message: err.response?.data?.errors?.join(", ") || "Could not update" });
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this term? Its assessments and marks will be removed too.")) return;
+    const ok = await confirm({
+      title: "Delete this term?",
+      message: "Its assessments and marks will be removed too. This cannot be undone.",
+      confirmText: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await client.delete(`/terms/${id}`);
+      notify({ type: "success", message: "Term deleted." });
       load();
     } catch (err) {
-      alert(err.response?.data?.error || "Could not delete");
+      notify({ type: "error", message: err.response?.data?.error || "Could not delete" });
     }
   }
 
@@ -78,40 +89,42 @@ export default function Terms() {
 
       {error && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>}
 
-      <div className="overflow-x-auto"><table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
-        <thead className="bg-slate-100 text-slate-600 text-left">
-          <tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Year</th><th className="px-3 py-2">Start</th><th className="px-3 py-2">End</th><th className="px-3 py-2"></th></tr>
-        </thead>
-        <tbody>
-          {terms.map((t) => (
-            <tr key={t.id} className="border-t border-slate-100">
-              {editingId === t.id ? (
-                <>
-                  <td className="px-3 py-2"><input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="rounded border border-slate-300 px-2 py-1 w-full" /></td>
-                  <td className="px-3 py-2"><input type="number" value={editForm.year} onChange={(e) => setEditForm({ ...editForm, year: e.target.value })} className="rounded border border-slate-300 px-2 py-1 w-20" /></td>
-                  <td className="px-3 py-2"><input type="date" value={editForm.start_date} onChange={(e) => setEditForm({ ...editForm, start_date: e.target.value })} className="rounded border border-slate-300 px-2 py-1" /></td>
-                  <td className="px-3 py-2"><input type="date" value={editForm.end_date} onChange={(e) => setEditForm({ ...editForm, end_date: e.target.value })} className="rounded border border-slate-300 px-2 py-1" /></td>
-                  <td className="px-3 py-2 space-x-2">
-                    <button onClick={() => saveEdit(t.id)} className="underline" style={{ color: "var(--color-gold)" }}>Save</button>
-                    <button onClick={() => setEditingId(null)} className="underline text-slate-500">Cancel</button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="px-3 py-2">{t.name}</td>
-                  <td className="px-3 py-2">{t.year}</td>
-                  <td className="px-3 py-2">{t.start_date}</td>
-                  <td className="px-3 py-2">{t.end_date}</td>
-                  <td className="px-3 py-2 space-x-3">
-                    <button onClick={() => startEdit(t)} className="underline text-slate-500">Edit</button>
-                    <button onClick={() => handleDelete(t.id)} className="underline text-red-600">Delete</button>
-                  </td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table></div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead className="bg-slate-100 text-slate-600 text-left">
+            <tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Year</th><th className="px-3 py-2">Start</th><th className="px-3 py-2">End</th><th className="px-3 py-2"></th></tr>
+          </thead>
+          <tbody>
+            {terms.map((t) => (
+              <tr key={t.id} className="border-t border-slate-100">
+                {editingId === t.id ? (
+                  <>
+                    <td className="px-3 py-2"><input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="rounded border border-slate-300 px-2 py-1 w-full" /></td>
+                    <td className="px-3 py-2"><input type="number" value={editForm.year} onChange={(e) => setEditForm({ ...editForm, year: e.target.value })} className="rounded border border-slate-300 px-2 py-1 w-20" /></td>
+                    <td className="px-3 py-2"><input type="date" value={editForm.start_date} onChange={(e) => setEditForm({ ...editForm, start_date: e.target.value })} className="rounded border border-slate-300 px-2 py-1" /></td>
+                    <td className="px-3 py-2"><input type="date" value={editForm.end_date} onChange={(e) => setEditForm({ ...editForm, end_date: e.target.value })} className="rounded border border-slate-300 px-2 py-1" /></td>
+                    <td className="px-3 py-2 space-x-2">
+                      <button onClick={() => saveEdit(t.id)} className="underline" style={{ color: "var(--color-gold)" }}>Save</button>
+                      <button onClick={() => setEditingId(null)} className="underline text-slate-500">Cancel</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-3 py-2">{t.name}</td>
+                    <td className="px-3 py-2">{t.year}</td>
+                    <td className="px-3 py-2">{t.start_date}</td>
+                    <td className="px-3 py-2">{t.end_date}</td>
+                    <td className="px-3 py-2 space-x-3">
+                      <button onClick={() => startEdit(t)} className="underline text-slate-500">Edit</button>
+                      <button onClick={() => handleDelete(t.id)} className="underline text-red-600">Delete</button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
