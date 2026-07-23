@@ -5,15 +5,20 @@ import { useAlert } from "../context/AlertContext";
 
 export default function AssessmentsList() {
   const { confirm, notify } = useAlert();
-
   const [assessments, setAssessments] = useState([]);
   const [error, setError] = useState("");
-
-  const [expandedGrades, setExpandedGrades] = useState({});
-  const [expandedTerms, setExpandedTerms] = useState({});
   const [search, setSearch] = useState("");
   const [year, setYear] = useState("");
   const [years, setYears] = useState([]);
+  const [expandedGrades, setExpandedGrades] = useState(() => {
+  const saved = localStorage.getItem("assessment-expanded-grades");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [expandedTerms, setExpandedTerms] = useState(() => {
+    const saved = localStorage.getItem("assessment-expanded-terms");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   function load(searchValue = search, yearValue = year) {
     client
@@ -43,6 +48,18 @@ export default function AssessmentsList() {
   useEffect(() => {
     load(search, year);
   }, [search, year]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "assessment-expanded-grades",
+      JSON.stringify(expandedGrades)
+    );
+
+    localStorage.setItem(
+      "assessment-expanded-terms",
+      JSON.stringify(expandedTerms)
+    );
+  }, [expandedGrades, expandedTerms]);
 
   async function handleDelete(id, name) {
     const ok = await confirm({
@@ -155,6 +172,25 @@ export default function AssessmentsList() {
       </span>
     );
   }
+
+  function getTermColor(term) {
+    const value = term.toLowerCase();
+
+    if (value.includes("term 1")) {
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    }
+
+    if (value.includes("term 2")) {
+      return "bg-green-100 text-green-800 border-green-200";
+    }
+
+    if (value.includes("term 3")) {
+      return "bg-amber-100 text-amber-800 border-amber-200";
+    }
+
+    return "bg-slate-100 text-slate-700 border-slate-200";
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
@@ -237,14 +273,23 @@ export default function AssessmentsList() {
                 </span>
               </div>
 
-              <span className="text-xl">
-                {expandedGrades[grade] ? "▼" : "▶"}
+              <span
+                className={`text-xl transition-transform duration-300 ${
+                  expandedGrades[grade] ? "rotate-90" : "rotate-0"
+                }`}
+              >
+                ▶
               </span>
             </button>
 
-            {expandedGrades[grade] && (
-              <div className="space-y-4 p-4 bg-slate-50">
-
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                expandedGrades[grade]
+                  ? "max-h-[5000px] opacity-100"
+                  : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="space-y-4 bg-slate-50 p-4">
                 {Object.entries(terms).map(([term, items]) => {
                   const key = `${grade}-${term}`;
 
@@ -257,18 +302,35 @@ export default function AssessmentsList() {
                       <button
                         type="button"
                         onClick={() => toggleTerm(grade, term)}
-                        className="flex w-full items-center justify-between bg-slate-100 px-4 py-3 font-medium"
+                        className={`flex w-full items-center justify-between border-b px-4 py-3 font-medium transition-all duration-200 hover:brightness-95 ${getTermColor(
+                          term
+                        )}`}
                       >
-                        <span>
-                          {term} ({items.length})
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span>{term}</span>
 
-                        <span>
-                          {expandedTerms[key] ? "▼" : "▶"}
+                          <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-semibold">
+                            {items.length}{" "}
+                            {items.length === 1 ? "assessment" : "assessments"}
+                          </span>
+                        </div>
+
+                        <span
+                          className={`text-lg transition-transform duration-300 ${
+                            expandedTerms[key] ? "rotate-90" : "rotate-0"
+                          }`}
+                        >
+                          ▶
                         </span>
                       </button>
 
-                      {expandedTerms[key] && (
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          expandedTerms[key]
+                            ? "max-h-[2500px] opacity-100"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead className="bg-slate-50 text-left text-slate-600">
@@ -278,9 +340,7 @@ export default function AssessmentsList() {
                                 <th className="px-3 py-2">Subject</th>
                                 <th className="px-3 py-2">Max Score</th>
                                 <th className="px-3 py-2">Status</th>
-                                <th className="px-3 py-2 text-right">
-                                  Actions
-                                </th>
+                                <th className="px-3 py-2 text-right">Actions</th>
                               </tr>
                             </thead>
 
@@ -329,9 +389,7 @@ export default function AssessmentsList() {
                                     </Link>
 
                                     <button
-                                      onClick={() =>
-                                        handleDelete(a.id, a.name)
-                                      }
+                                      onClick={() => handleDelete(a.id, a.name)}
                                       className="underline text-red-600"
                                     >
                                       Delete
@@ -353,12 +411,12 @@ export default function AssessmentsList() {
                             </tbody>
                           </table>
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            )}
+            </div>
           </div>
         );
       })}
