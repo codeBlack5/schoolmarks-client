@@ -6,6 +6,8 @@ import { useAlert } from "../context/AlertContext";
 export default function AssessmentsList() {
   const { confirm, notify } = useAlert();
   const [assessments, setAssessments] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [year, setYear] = useState("");
@@ -24,17 +26,22 @@ export default function AssessmentsList() {
     client
       .get("/assessments", {
         params: {
+          page,
+          per_page: 20,
           search: searchValue || undefined,
           year: yearValue || undefined,
         },
       })
       .then((res) => {
-        setAssessments(res.data);
+        const { data, pagination } = res.data;
+
+        setAssessments(data);
+        setPagination(pagination);
 
         // Populate academic years dropdown
         const uniqueYears = [
           ...new Set(
-            res.data
+            data
               .map((assessment) => assessment.term?.year)
               .filter(Boolean)
           ),
@@ -45,9 +52,22 @@ export default function AssessmentsList() {
       .catch(() => setError("Could not load assessments"));
   }
 
+  // Reset to first page whenever filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, year]);
+
+  // Load whenever page or filters change
   useEffect(() => {
     load(search, year);
-  }, [search, year]);
+  }, [page, search, year]);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [page]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -191,32 +211,33 @@ export default function AssessmentsList() {
     return "bg-slate-100 text-slate-700 border-slate-200";
   }
 
+  const stats = useMemo(() => {
+    return assessments.reduce(
+      (acc, assessment) => {
+        acc.total++;
+
+        if (assessment.marking?.complete) {
+          acc.completed++;
+        } else if ((assessment.marking?.submitted ?? 0) > 0) {
+          acc.inProgress++;
+        } else {
+          acc.notStarted++;
+        }
+
+        return acc;
+      },
+      {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        notStarted: 0,
+      }
+    );
+  }, [assessments]);
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
-          <input
-            type="text"
-            placeholder="Search assessment or subject..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
-
-          <select
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          >
-            <option value="">All Years</option>
-
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
         <h1
           className="text-xl font-semibold"
           style={{ color: "var(--color-navy)" }}
@@ -232,7 +253,58 @@ export default function AssessmentsList() {
           + New Assessment
         </Link>
       </div>
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
+        <input
+          type="text"
+          placeholder="Search assessment or subject..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        />
 
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          <option value="">All Years</option>
+
+          {years.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm text-slate-500">Assessments</p>
+          <h2 className="mt-2 text-3xl font-bold text-slate-800">
+            {stats.total}
+          </h2>
+        </div>
+
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
+          <p className="text-sm text-green-700">Completed</p>
+          <h2 className="mt-2 text-3xl font-bold text-green-700">
+            {stats.completed}
+          </h2>
+        </div>
+
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 shadow-sm">
+          <p className="text-sm text-yellow-700">In Progress</p>
+          <h2 className="mt-2 text-3xl font-bold text-yellow-700">
+            {stats.inProgress}
+          </h2>
+        </div>
+
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm">
+          <p className="text-sm text-red-700">Not Started</p>
+          <h2 className="mt-2 text-3xl font-bold text-red-700">
+            {stats.notStarted}
+          </h2>
+        </div>
+      </div>
       {error && (
         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
@@ -420,6 +492,66 @@ export default function AssessmentsList() {
           </div>
         );
       })}
+      {pagination && pagination.total_pages > 1 && (
+      <div className="mt-8 flex flex-col items-center gap-4">
+
+        <div className="text-sm text-slate-600">
+          Showing page{" "}
+          <strong>{pagination.current_page}</strong>
+          {" "}of{" "}
+          <strong>{pagination.total_pages}</strong>
+
+          {" • "}
+
+          {pagination.total_count} assessments
+        </div>
+
+        <div className="flex items-center gap-2">
+
+          <button
+            disabled={!pagination.prev_page}
+            onClick={() => setPage((p) => p - 1)}
+            className="rounded border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Previous
+          </button>
+
+          {Array.from(
+            { length: pagination.total_pages },
+            (_, i) => i + 1
+          )
+            .filter((number) => {
+              return (
+                number === 1 ||
+                number === pagination.total_pages ||
+                Math.abs(number - pagination.current_page) <= 2
+              );
+            })
+            .map((number) => (
+              <button
+                key={number}
+                onClick={() => setPage(number)}
+                className={`h-10 w-10 rounded border transition ${
+                  number === pagination.current_page
+                    ? "bg-blue-600 text-white"
+                    : "bg-white hover:bg-slate-100"
+                }`}
+              >
+                {number}
+              </button>
+            ))}
+
+          <button
+            disabled={!pagination.next_page}
+            onClick={() => setPage((p) => p + 1)}
+            className="rounded border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next →
+          </button>
+
+        </div>
+      </div>
+    )}
     </div>
   );
 }
