@@ -10,6 +10,7 @@ export default function MarkEntryGrid() {
   const [message, setMessage] = useState(null);
   const [errors, setErrors] = useState([]);
   const inputRefs = useRef([]);
+  const draftKey = `mark-draft-${assessmentId}`;
 
   const [editRequestRow, setEditRequestRow] = useState(null); // row being edited via modal
   const [editRequestForm, setEditRequestForm] = useState({ new_score: "", new_status: "present", reason: "" });
@@ -22,11 +23,47 @@ export default function MarkEntryGrid() {
       client.get(`/assessments/${assessmentId}/roster`),
     ]).then(([assessmentRes, rosterRes]) => {
       setAssessment(assessmentRes.data);
-      setRows(rosterRes.data);
+
+      const roster = rosterRes.data;
+
+      // Restore unsaved draft if available
+      const draft = localStorage.getItem(draftKey);
+
+      if (draft) {
+        try {
+          const savedRows = JSON.parse(draft);
+
+          const merged = roster.map((student) => {
+            const saved = savedRows.find(
+              (r) => r.student_id === student.student_id
+            );
+
+            return saved && !student.mark_id
+              ? { ...student, score: saved.score, status: saved.status }
+              : student;
+          });
+
+          setRows(merged);
+        } catch {
+          setRows(roster);
+        }
+      } else {
+        setRows(roster);
+      }
     });
   }
 
   useEffect(load, [assessmentId]);
+  useEffect(() => {
+    if (!rows.length) return;
+
+    const unsaved = rows.filter((r) => !r.mark_id);
+
+    localStorage.setItem(
+      draftKey,
+      JSON.stringify(unsaved)
+    );
+  }, [rows, draftKey]);
 
   function updateRow(index, changes) {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...changes } : r)));
@@ -56,6 +93,7 @@ export default function MarkEntryGrid() {
         })),
       });
       setMessage(`Saved ${data.created.length} marks.`);
+      localStorage.removeItem(draftKey);
       load();
     } catch (err) {
       setErrors(err.response?.data?.details || []);
@@ -71,6 +109,29 @@ export default function MarkEntryGrid() {
     setEditRequestError("");
   }
 
+  useEffect(() => {
+    function handleBeforeUnload(e) {
+      const hasUnsaved = rows.some((r) => !r.mark_id && (
+        r.score !== null ||
+        r.score !== "" ||
+        r.status !== "present"
+      ));
+
+      if (!hasUnsaved) return;
+
+      e.preventDefault();
+      e.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () =>
+      window.removeEventListener(
+        "beforeunload",
+        handleBeforeUnload
+      );
+  }, [rows]);
+  
   async function submitEditRequest(e) {
     e.preventDefault();
     setEditRequestSaving(true);
