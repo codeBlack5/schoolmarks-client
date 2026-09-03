@@ -31,6 +31,7 @@ import Reports from "./pages/Reports";
 import Staff from "./pages/Staff";
 import Profile from "./pages/Profile";
 import VerifyEmail from "./pages/VerifyEmail";
+import StudentDetails from "./pages/StudentDetails";
 
 function Home() {
   const { user, isAdmin, isSystemAdmin, activeTenant } = useAuth();
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="/grades" element={admin(<Grades />)} />
             <Route path="/subjects" element={admin(<Subjects />)} />
             <Route path="/students" element={admin(<Students />)} />
+            <Route path="/students/:id" element={admin(<StudentDetails />)} />
             <Route path="/terms" element={admin(<Terms />)} />
             <Route path="/teachers" element={admin(<Teachers />)} />
             <Route path="/assignments" element={admin(<Assignments />)} />

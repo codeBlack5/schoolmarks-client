@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import client from "../api/client";
 import { downloadFile } from "../api/download";
 import { useAlert } from "../context/AlertContext";
@@ -197,8 +198,27 @@ export default function Students() {
                         </td>
                         <td className="px-3 py-2 text-xs text-slate-500">{s.guardian_phone || "—"}</td>
                         <td className="px-3 py-2 space-x-3 whitespace-nowrap">
-                          <button onClick={() => startEdit(s)} className="underline text-slate-500">Edit</button>
-                          <button onClick={() => handleDelete(s.id)} className="underline text-red-600">Delete</button>
+                          <Link
+                            to={`/students/${s.id}`}
+                            className="underline"
+                            style={{ color: "var(--color-navy)" }}
+                          >
+                            Records
+                          </Link>
+
+                          <button
+                            onClick={() => startEdit(s)}
+                            className="underline text-slate-500"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => handleDelete(s.id)}
+                            className="underline text-red-600"
+                          >
+                            Delete
+                          </button>
                         </td>
                       </>
                     )}
