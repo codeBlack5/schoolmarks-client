@@ -4,7 +4,7 @@ import client from "../api/client";
 import { useAlert } from "../context/AlertContext";
 
 const TYPES = [
-  { value: "cat", label: "CAT" },
+  { value: "opener", label: "Opener Exam" },
   { value: "mid_term", label: "Mid-Term Exam" },
   { value: "end_term", label: "End-Term Exam" },
 ];
@@ -13,7 +13,7 @@ export default function AssessmentBatchForm() {
   const navigate = useNavigate();
   const { notify } = useAlert();
   const [grades, setGrades] = useState([]);
-  const [form, setForm] = useState({ grade_id: "", term_id: "", assessment_type: "cat", name: "" });
+  const [form, setForm] = useState({ grade_id: "", term_id: "", assessment_type: "opener", name: "" });
   const [terms, setTerms] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -58,7 +58,7 @@ export default function AssessmentBatchForm() {
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="e.g. CAT 1"
+            placeholder="e.g. Opener Exam"
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
