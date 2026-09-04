@@ -1,18 +1,19 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
 import client from "../api/client";
+
 import StudentProfile from "../components/students/StudentProfile";
 import StudentGuardians from "../components/students/StudentGuardians";
 import StudentDocuments from "../components/students/StudentDocuments";
 import StudentHistory from "../components/students/StudentHistory";
 
-const tabs = [
-  { id: "overview", label: "Overview" },
-  { id: "profile", label: "Profile" },
-  { id: "guardians", label: "Guardians" },
-  { id: "documents", label: "Documents" },
-  { id: "history", label: "History" },
-];
+import StudentHeader from "./StudentDetails/components/StudentHeader";
+import QuickSummary from "./StudentDetails/components/QuickSummary";
+import StudentTabs from "./StudentDetails/components/StudentTabs";
+import ChangeStatusModal from "./StudentDetails/components/ChangeStatusModal";
+import OverviewTab from "./StudentDetails/components/OverviewTab";
+import StudentDetailsSkeleton from "./StudentDetails/components/StudentDetailsSkeleton";
 
 export default function StudentDetails() {
   const { id } = useParams();
@@ -20,331 +21,236 @@ export default function StudentDetails() {
   const [studentData, setStudentData] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
-    const loadStudent = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const loadStudent = useCallback(
+    async ({ refresh = false } = {}) => {
+      if (refresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
-    try {
-        const { data } = await client.get(`/students/${id}/overview`);
-        setStudentData(data);
-    } catch (err) {
-        setError(
-        err.response?.data?.error || "Could not load student records."
+      setError("");
+
+      try {
+        const { data } = await client.get(
+          `/students/${id}/overview`
         );
-    } finally {
-        setLoading(false);
-    }
-    }, [id]);
 
-    useEffect(() => {
+        setStudentData(data);
+      } catch (err) {
+        setError(
+          err.response?.data?.error ||
+            err.response?.data?.message ||
+            "Could not load student records."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [id]
+  );
+
+  useEffect(() => {
     loadStudent();
-    }, [loadStudent]);
+  }, [loadStudent]);
+
+  const refreshStudent = useCallback(async () => {
+    await loadStudent({ refresh: true });
+  }, [loadStudent]);
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        <p className="text-sm text-slate-500">Loading student records...</p>
+      <div className="mx-auto max-w-6xl p-4 sm:p-6">
+        <StudentDetailsSkeleton />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        <Link
-          to="/students"
-          className="text-sm underline text-slate-500"
-        >
-          ← Back to Students
-        </Link>
-
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
-      </div>
+      <StudentDetailsError
+        error={error}
+        onRetry={() => loadStudent()}
+      />
     );
   }
 
   if (!studentData?.student) {
-    return (
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        <p className="text-sm text-slate-500">Student not found.</p>
-      </div>
-    );
+    return <StudentNotFound />;
   }
 
   const { student } = studentData;
+  const guardians = studentData.guardians || [];
+  const documents = studentData.documents || [];
+  const history = studentData.history || [];
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl p-4 sm:p-6">
       <Link
         to="/students"
-        className="inline-block mb-5 text-sm underline text-slate-500 hover:text-slate-700"
+        className="mb-5 inline-flex text-sm text-slate-500 hover:text-slate-700"
       >
         ← Back to Students
       </Link>
 
-      {/* Student header */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 mb-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1
-              className="text-xl font-semibold"
-              style={{ color: "var(--color-navy)" }}
-            >
-              {student.name}
-            </h1>
+      <StudentHeader
+        student={student}
+        profile={studentData.profile}
+        refreshing={refreshing}
+        onRefresh={refreshStudent}
+        onChangeStatus={() => setShowStatusModal(true)}
+      />
 
-            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-500">
-              <span>
-                <strong>Admission:</strong>{" "}
-                {student.admission_number}
-              </span>
+      <QuickSummary
+        guardians={guardians}
+        documents={documents}
+        history={history}
+        profile={studentData.profile}
+      />
 
-              <span>
-                <strong>Grade:</strong>{" "}
-                {student.grade?.name || "—"}
-              </span>
-            </div>
-          </div>
+      <StudentTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        studentData={studentData}
+      />
 
-          <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-500">
-            Student ID: {student.id}
-          </div>
-        </div>
-      </div>
+      <StudentTabContent
+        activeTab={activeTab}
+        studentId={id}
+        studentData={studentData}
+        guardians={guardians}
+        documents={documents}
+        history={history}
+        onTabChange={setActiveTab}
+        onUpdated={refreshStudent}
+      />
 
-      {/* Tabs */}
-      <div className="border-b border-slate-200 mb-6 overflow-x-auto">
-        <nav className="flex min-w-max gap-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-3 text-sm font-medium border-b-2 transition ${
-                activeTab === tab.id
-                  ? "border-[var(--color-navy)] text-[var(--color-navy)]"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Content */}
-      {activeTab === "overview" && (
-        <OverviewTab studentData={studentData} />
+      {showStatusModal && (
+        <ChangeStatusModal
+          student={student}
+          onClose={() => setShowStatusModal(false)}
+          onUpdated={refreshStudent}
+        />
       )}
+    </div>
+  );
+}
 
-      {activeTab === "profile" && (
+function StudentTabContent({
+  activeTab,
+  studentId,
+  studentData,
+  guardians,
+  documents,
+  history,
+  onTabChange,
+  onUpdated,
+}) {
+  switch (activeTab) {
+    case "overview":
+      return (
+        <OverviewTab
+          studentData={studentData}
+          onTabChange={onTabChange}
+        />
+      );
+
+    case "profile":
+      return (
         <StudentProfile
-          studentId={id}
+          studentId={studentId}
           profile={studentData.profile}
-          onUpdated={loadStudent}
+          onUpdated={onUpdated}
         />
-      )}
+      );
 
-      {activeTab === "guardians" && (
+    case "guardians":
+      return (
         <StudentGuardians
-          studentId={id}
-          guardians={studentData.guardians || []}
-          onUpdated={loadStudent}
+          studentId={studentId}
+          guardians={guardians}
+          onUpdated={onUpdated}
         />
-      )}
+      );
 
-      {activeTab === "documents" && (
+    case "documents":
+      return (
         <StudentDocuments
-          studentId={id}
-          documents={studentData?.documents || []}
-          onUpdated={loadStudent}
+          studentId={studentId}
+          documents={documents}
+          onUpdated={onUpdated}
         />
-      )}
+      );
 
-      {activeTab === "history" && (
+    case "history":
+      return (
         <StudentHistory
-          studentId={id}
-          history={studentData?.history || []}
-          onUpdated={loadStudent}
+          studentId={studentId}
+          history={history}
+          onUpdated={onUpdated}
         />
-      )}
-    </div>
-  );
+      );
+
+    default:
+      return null;
+  }
 }
 
-function OverviewTab({ studentData }) {
-  const { profile, guardians, documents, history } = studentData;
-
-  const primaryGuardian =
-    guardians?.find((guardian) => guardian.is_primary) ||
-    guardians?.[0];
-
+function StudentDetailsError({ error, onRetry }) {
   return (
-    <div className="space-y-5">
-      {/* Basic information */}
-      <Section title="Basic Information">
-        <InfoGrid>
-          <InfoItem label="Name" value={studentData.student.name} />
-          <InfoItem
-            label="Admission Number"
-            value={studentData.student.admission_number}
-          />
-          <InfoItem
-            label="Grade"
-            value={studentData.student.grade?.name}
-          />
-          <InfoItem
-            label="Student ID"
-            value={studentData.student.id}
-          />
-        </InfoGrid>
-      </Section>
-
-      {/* Profile summary */}
-      <Section title="Profile">
-        {profile ? (
-          <InfoGrid>
-            <InfoItem
-              label="Date of Birth"
-              value={profile.date_of_birth}
-            />
-            <InfoItem label="Gender" value={profile.gender} />
-            <InfoItem
-              label="Admission Date"
-              value={profile.admission_date}
-            />
-            <InfoItem
-              label="Birth Place"
-              value={profile.birth_place}
-            />
-            <InfoItem
-              label="Nationality"
-              value={profile.nationality}
-            />
-            <InfoItem
-              label="Home Language"
-              value={profile.home_language}
-            />
-            <InfoItem label="County" value={profile.county} />
-            <InfoItem
-              label="Sub County"
-              value={profile.sub_county}
-            />
-            <InfoItem label="Address" value={profile.address} />
-            <InfoItem
-              label="Special Needs"
-              value={profile.special_needs ? "Yes" : "No"}
-            />
-          </InfoGrid>
-        ) : (
-          <p className="text-sm text-slate-500">
-            No student profile has been created yet.
-          </p>
-        )}
-      </Section>
-
-      {/* Guardian summary */}
-      <Section title="Primary Guardian">
-        {primaryGuardian ? (
-          <InfoGrid>
-            <InfoItem
-              label="Name"
-              value={primaryGuardian.name}
-            />
-            <InfoItem
-              label="Relationship"
-              value={primaryGuardian.relationship}
-            />
-            <InfoItem
-              label="Phone"
-              value={primaryGuardian.phone}
-            />
-            <InfoItem
-              label="Email"
-              value={primaryGuardian.email}
-            />
-          </InfoGrid>
-        ) : (
-          <p className="text-sm text-slate-500">
-            No guardian has been added.
-          </p>
-        )}
-      </Section>
-
-      {/* Record counts */}
-      <Section title="Student Records">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <CountCard
-            label="Guardians"
-            value={guardians?.length || 0}
-          />
-
-          <CountCard
-            label="Documents"
-            value={documents?.length || 0}
-          />
-
-          <CountCard
-            label="History Events"
-            value={history?.length || 0}
-          />
-        </div>
-      </Section>
-    </div>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h2
-        className="text-base font-semibold mb-4"
-        style={{ color: "var(--color-navy)" }}
+    <div className="mx-auto max-w-6xl p-4 sm:p-6">
+      <Link
+        to="/students"
+        className="text-sm text-slate-500 hover:text-slate-700"
       >
-        {title}
-      </h2>
+        ← Back to Students
+      </Link>
 
-      {children}
-    </section>
-  );
-}
+      <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-5">
+        <h2 className="font-semibold text-red-800">
+          Unable to load student
+        </h2>
 
-function InfoGrid({ children }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {children}
+        <p className="mt-1 text-sm text-red-700">
+          {error}
+        </p>
+
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+        >
+          Try Again
+        </button>
+      </div>
     </div>
   );
 }
 
-function InfoItem({ label, value }) {
+function StudentNotFound() {
   return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm text-slate-700">
-        {value || "—"}
-      </p>
-    </div>
-  );
-}
-
-function CountCard({ label, value }) {
-  return (
-    <div className="rounded-lg bg-slate-50 border border-slate-100 p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p
-        className="mt-1 text-xl font-semibold"
-        style={{ color: "var(--color-navy)" }}
+    <div className="mx-auto max-w-6xl p-4 sm:p-6">
+      <Link
+        to="/students"
+        className="text-sm text-slate-500 hover:text-slate-700"
       >
-        {value}
-      </p>
+        ← Back to Students
+      </Link>
+
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <h2 className="font-semibold text-slate-800">
+          Student not found
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          This student record could not be found.
+        </p>
+      </div>
     </div>
   );
 }

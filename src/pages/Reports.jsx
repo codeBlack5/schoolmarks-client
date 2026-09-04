@@ -68,7 +68,7 @@ export default function Reports() {
             {terms.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.year})</option>)}
           </select>
           <select value={rankingForm.assessment_type} onChange={(e) => setRankingForm({ ...rankingForm, assessment_type: e.target.value })} className="rounded-md border border-slate-300 px-3 py-2 text-sm">
-            <option value="cat">CAT</option>
+            <option value="opener">Opener Exam</option>
             <option value="mid_term">Mid-Term Exam</option>
             <option value="end_term">End-Term Exam</option>
           </select>

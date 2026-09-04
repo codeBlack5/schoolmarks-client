@@ -6,6 +6,10 @@ const EVENT_TYPES = [
   { value: "admission", label: "Admission" },
   { value: "transfer", label: "Transfer" },
   { value: "promotion", label: "Promotion" },
+  { value: "graduation", label: "Graduation" },
+  { value: "withdrawal", label: "Withdrawal" },
+  { value: "status_change", label: "Status Change" },
+  { value: "archive", label: "Archived" },
   { value: "academic", label: "Academic" },
   { value: "attendance", label: "Attendance" },
   { value: "disciplinary", label: "Disciplinary" },
@@ -187,6 +191,82 @@ const EVENT_ICONS = {
       />
     </svg>
   ),
+    graduation: (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 8.5 12 4l8 4.5-8 4.5L4 8.5Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 11v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4"
+      />
+      <path
+        strokeLinecap="round"
+        d="M20 9v5"
+      />
+    </svg>
+  ),
+
+  withdrawal: (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path
+        strokeLinecap="round"
+        d="M8 12h8"
+      />
+    </svg>
+  ),
+
+  status_change: (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 7h10m0 0-3-3m3 3-3 3M17 17H7m0 0 3-3m-3 3 3 3"
+      />
+    </svg>
+  ),
+
+  archive: (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 7h16l-1 13H5L4 7Z"
+      />
+      <path
+        strokeLinecap="round"
+        d="M6 7V4h12v3M9 11h6"
+      />
+    </svg>
+  ),
 
   other: (
     <svg
@@ -240,6 +320,15 @@ function getEventLabel(eventType) {
   );
 }
 
+function getEventSource(item) {
+  return String(item.event_source || "manual").toLowerCase();
+}
+
+function formatMetadataLabel(key) {
+  return String(key || "")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 export default function StudentHistory({
   studentId,
   history = [],
@@ -251,6 +340,7 @@ export default function StudentHistory({
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [expandedEvents, setExpandedEvents] = useState({});
 
   const [form, setForm] = useState({
     event_type: "",
@@ -368,6 +458,13 @@ export default function StudentHistory({
     }
   };
 
+  const toggleEventDetails = (eventId) => {
+    setExpandedEvents((current) => ({
+      ...current,
+      [eventId]: !current[eventId],
+    }));
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -460,57 +557,123 @@ export default function StudentHistory({
             <div className="absolute bottom-4 left-5 top-4 w-px bg-gray-200" />
 
             <div className="space-y-8">
-              {filteredHistory.map((item, index) => {
-                const type = normalizeEventType(item.event_type);
-                const eventDate = item.event_date || item.created_at;
+            {filteredHistory.map((item, index) => {
+              const type = normalizeEventType(item.event_type);
+              const eventDate = item.event_date || item.created_at;
+              const eventId =
+                item.id || `${type}-${eventDate}-${index}`;
 
-                return (
-                  <div
-                    key={item.id || `${type}-${eventDate}-${index}`}
-                    className="relative flex gap-4"
-                  >
-                    <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-50 text-blue-600 shadow-sm">
-                      {EVENT_ICONS[type] || EVENT_ICONS.other}
-                    </div>
+              const eventSource = getEventSource(item);
+              const metadata = item.metadata || {};
+              const hasMetadata =
+                Object.keys(metadata).length > 0;
 
-                    <div className="min-w-0 flex-1 pb-1">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                        <div>
+              const isExpanded = Boolean(expandedEvents[eventId]);
+
+              return (
+                <div
+                  key={eventId}
+                  className="relative flex gap-4"
+                >
+                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-50 text-blue-600 shadow-sm">
+                    {EVENT_ICONS[type] || EVENT_ICONS.other}
+                  </div>
+
+                  <div className="min-w-0 flex-1 pb-1">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
                             {getEventLabel(item.event_type)}
                           </span>
 
-                          <h3 className="mt-2 text-sm font-semibold text-gray-900">
-                            {item.description || "No description provided"}
-                          </h3>
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                              eventSource === "system"
+                                ? "bg-slate-100 text-slate-600"
+                                : "bg-green-50 text-green-700"
+                            }`}
+                          >
+                            {eventSource === "system"
+                              ? "SYSTEM"
+                              : "MANUAL"}
+                          </span>
                         </div>
 
-                        <div className="shrink-0 text-left md:text-right">
-                          <p className="text-sm font-medium text-gray-700">
-                            {formatDate(eventDate)}
-                          </p>
-
-                          {formatTime(eventDate) && (
-                            <p className="mt-0.5 text-xs text-gray-400">
-                              {formatTime(eventDate)}
-                            </p>
-                          )}
-                        </div>
+                        <h3 className="mt-2 text-sm font-semibold text-gray-900">
+                          {item.description ||
+                            "No description provided"}
+                        </h3>
                       </div>
 
-                      {item.recorded_by && (
-                        <p className="mt-2 text-xs text-gray-500">
-                          Recorded by{" "}
-                          <span className="font-medium text-gray-700">
-                            {item.recorded_by.name ||
-                              item.recorded_by.email}
-                          </span>
+                      <div className="shrink-0 text-left md:text-right">
+                        <p className="text-sm font-medium text-gray-700">
+                          {formatDate(eventDate)}
                         </p>
-                      )}
+
+                        {formatTime(eventDate) && (
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            {formatTime(eventDate)}
+                          </p>
+                        )}
+                      </div>
                     </div>
+
+                    {item.recorded_by && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Recorded by{" "}
+                        <span className="font-medium text-gray-700">
+                          {item.recorded_by.name ||
+                            item.recorded_by.email}
+                        </span>
+                      </p>
+                    )}
+
+                    {hasMetadata && (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleEventDetails(eventId)
+                          }
+                          className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                        >
+                          {isExpanded
+                            ? "Hide details ↑"
+                            : "View details →"}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              {Object.entries(metadata).map(
+                                ([key, value]) => (
+                                  <div key={key}>
+                                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                      {formatMetadataLabel(key)}
+                                    </dt>
+
+                                    <dd className="mt-1 text-sm font-medium text-slate-700">
+                                      {value === null ||
+                                      value === undefined ||
+                                      value === ""
+                                        ? "—"
+                                        : typeof value === "object"
+                                        ? JSON.stringify(value)
+                                        : String(value)}
+                                    </dd>
+                                  </div>
+                                )
+                              )}
+                            </dl>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
             </div>
           </div>
         </div>
