@@ -32,6 +32,7 @@ import Staff from "./pages/Staff";
 import Profile from "./pages/Profile";
 import VerifyEmail from "./pages/VerifyEmail";
 import StudentDetails from "./pages/StudentDetails";
+import TeacherAnalytics from "./pages/TeacherAnalytics";
 
 function Home() {
   const { user, isAdmin, isSystemAdmin, activeTenant } = useAuth();
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/dashboard" element={admin(<Dashboard />)} />
             <Route path="/my-classes" element={anyUser(<MyClasses />)} />
             <Route path="/marks/:assessmentId" element={anyUser(<MarkEntryGrid />)} />
+            <Route path="/teacher-analytics" element={anyUser(<TeacherAnalytics />)} />
             <Route path="/assessments" element={admin(<AssessmentsList />)} />
             <Route path="/assessments/new" element={admin(<AssessmentBatchForm />)} />
             <Route path="/assessments/:id/edit" element={anyUser(<AssessmentForm />)} />

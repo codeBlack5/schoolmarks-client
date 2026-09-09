@@ -109,6 +109,15 @@ export default function Sidebar({ open, onClose }) {
             )}
 
             {isAdmin && <NavLink to="/dashboard" className={linkClass} onClick={onClose}>Dashboard</NavLink>}
+
+            <NavLink
+              to="/teacher-analytics"
+              className={linkClass}
+              onClick={onClose}
+            >
+              Analytics
+            </NavLink>
+
             {isAdmin && <NavLink to="/assessments" className={linkClass} onClick={onClose}>Assessments</NavLink>}
             {isAdmin && <NavLink to="/reports" className={linkClass} onClick={onClose}>Reports</NavLink>}
             {isAdmin && <NavLink to="/edit-requests" className={linkClass} onClick={onClose}>Edit Requests</NavLink>}
