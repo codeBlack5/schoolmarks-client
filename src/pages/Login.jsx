@@ -16,7 +16,20 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      navigate(user.role === "admin" ? "/dashboard" : "/my-classes");
+      const teacherWorkspaceRoles = [
+        "teacher",
+        "headteacher",
+        "deputy",
+        "dos",
+      ];
+      
+      if (teacherWorkspaceRoles.includes(user.role)) {
+        navigate("/teacher/dashboard");
+      } else if (user.role === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate("/my-classes");
+      }
     } catch (err) {
       setError(err.response?.data?.error || "Login failed");
     } finally {

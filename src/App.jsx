@@ -1,5 +1,12 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AlertProvider } from "./context/AlertContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -34,33 +41,85 @@ import VerifyEmail from "./pages/VerifyEmail";
 import StudentDetails from "./pages/StudentDetails";
 import TeacherAnalytics from "./pages/TeacherAnalytics";
 
+// Teacher Workspace Pages
+import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherClasses from "./pages/teacher/TeacherClasses";
+import ClassWorkspace from "./pages/teacher/ClassWorkspace";
+import ClassStudents from "./pages/teacher/ClassStudents";
+import TeacherStudentProfile from "./pages/teacher/TeacherStudentProfile";
+import TeacherSubjects from "./pages/teacher/TeacherSubjects";
+import TeacherProfile from "./pages/teacher/TeacherProfile";
+
 function Home() {
-  const { user, isAdmin, isSystemAdmin, activeTenant } = useAuth();
+  const {
+    user,
+    isAdmin,
+    isSystemAdmin,
+    isTeacherWorkspaceUser,
+    activeTenant,
+  } = useAuth();
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // System admins landing page (when not inspecting a specific school tenant)
+  // System admins landing page when not inspecting a school tenant
   if (isSystemAdmin && !activeTenant) {
     return <Navigate to="/admin/schools" replace />;
   }
 
-  return <Navigate to={isAdmin ? "/dashboard" : "/my-classes"} replace />;
+  // Teacher Workspace users go directly to their workspace
+  if (isTeacherWorkspaceUser) {
+    return <Navigate to="/teacher/dashboard" replace />;
+  }
+
+  // Existing admin/school routing
+  return (
+    <Navigate
+      to={isAdmin ? "/dashboard" : "/my-classes"}
+      replace
+    />
+  );
 }
 
 function withLayout(element) {
   return <Layout>{element}</Layout>;
 }
 
+// System administrator routes
 function systemAdmin(element) {
-  return <ProtectedRoute systemAdminOnly>{withLayout(element)}</ProtectedRoute>;
+  return (
+    <ProtectedRoute systemAdminOnly>
+      {withLayout(element)}
+    </ProtectedRoute>
+  );
 }
 
+// Admin-level school routes
 function admin(element) {
-  return <ProtectedRoute adminOnly>{withLayout(element)}</ProtectedRoute>;
+  return (
+    <ProtectedRoute adminOnly>
+      {withLayout(element)}
+    </ProtectedRoute>
+  );
 }
 
+// Existing authenticated-user routes
 function anyUser(element) {
-  return <ProtectedRoute>{withLayout(element)}</ProtectedRoute>;
+  return (
+    <ProtectedRoute>
+      {withLayout(element)}
+    </ProtectedRoute>
+  );
+}
+
+// Teacher Workspace routes
+function teacherWorkspace(element) {
+  return (
+    <ProtectedRoute teacherWorkspaceOnly>
+      {withLayout(element)}
+    </ProtectedRoute>
+  );
 }
 
 export default function App() {
@@ -69,38 +128,183 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register-school" element={<RegisterSchool />} />
 
-            {/* Platform Management Routes (System Admin) */}
-            <Route path="/admin/schools" element={systemAdmin(<SchoolsManager />)} />
-            <Route path="/admin/schools/new" element={systemAdmin(<NewSchool />)} />
+            {/* =====================================================
+                PUBLIC ROUTES
+            ===================================================== */}
 
-            {/* School Workspace Routes */}
-            <Route path="/dashboard" element={admin(<Dashboard />)} />
-            <Route path="/my-classes" element={anyUser(<MyClasses />)} />
-            <Route path="/marks/:assessmentId" element={anyUser(<MarkEntryGrid />)} />
-            <Route path="/teacher-analytics" element={anyUser(<TeacherAnalytics />)} />
-            <Route path="/assessments" element={admin(<AssessmentsList />)} />
-            <Route path="/assessments/new" element={admin(<AssessmentBatchForm />)} />
-            <Route path="/assessments/:id/edit" element={anyUser(<AssessmentForm />)} />
-            <Route path="/grades" element={admin(<Grades />)} />
-            <Route path="/subjects" element={admin(<Subjects />)} />
-            <Route path="/students" element={admin(<Students />)} />
-            <Route path="/students/:id" element={admin(<StudentDetails />)} />
-            <Route path="/terms" element={admin(<Terms />)} />
-            <Route path="/teachers" element={admin(<Teachers />)} />
-            <Route path="/assignments" element={admin(<Assignments />)} />
-            <Route path="/edit-requests" element={admin(<EditRequestsQueue />)} />
-            <Route path="/reports" element={admin(<Reports />)} />
-            <Route path="/staff" element={admin(<Staff />)} />
-            <Route path="/profile" element={anyUser(<Profile />)} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route
+              path="/"
+              element={<Home />}
+            />
+
+            <Route
+              path="/login"
+              element={<Login />}
+            />
+
+            <Route
+              path="/register-school"
+              element={<RegisterSchool />}
+            />
+
+            {/* =====================================================
+                PLATFORM MANAGEMENT ROUTES
+                System Admin only
+            ===================================================== */}
+
+            <Route
+              path="/admin/schools"
+              element={systemAdmin(<SchoolsManager />)}
+            />
+
+            <Route
+              path="/admin/schools/new"
+              element={systemAdmin(<NewSchool />)}
+            />
+
+            {/* =====================================================
+                SCHOOL WORKSPACE ROUTES
+            ===================================================== */}
+
+            <Route
+              path="/dashboard"
+              element={admin(<Dashboard />)}
+            />
+
+            <Route
+              path="/my-classes"
+              element={anyUser(<MyClasses />)}
+            />
+
+            <Route
+              path="/marks/:assessmentId"
+              element={anyUser(<MarkEntryGrid />)}
+            />
+
+            <Route
+              path="/teacher-analytics"
+              element={anyUser(<TeacherAnalytics />)}
+            />
+
+            <Route
+              path="/assessments"
+              element={admin(<AssessmentsList />)}
+            />
+
+            <Route
+              path="/assessments/new"
+              element={admin(<AssessmentBatchForm />)}
+            />
+
+            <Route
+              path="/assessments/:id/edit"
+              element={anyUser(<AssessmentForm />)}
+            />
+
+            <Route
+              path="/grades"
+              element={admin(<Grades />)}
+            />
+
+            <Route
+              path="/subjects"
+              element={admin(<Subjects />)}
+            />
+
+            <Route
+              path="/students"
+              element={admin(<Students />)}
+            />
+
+            <Route
+              path="/students/:id"
+              element={admin(<StudentDetails />)}
+            />
+
+            <Route
+              path="/terms"
+              element={admin(<Terms />)}
+            />
+
+            <Route
+              path="/teachers"
+              element={admin(<Teachers />)}
+            />
+
+            <Route
+              path="/assignments"
+              element={admin(<Assignments />)}
+            />
+
+            <Route
+              path="/edit-requests"
+              element={admin(<EditRequestsQueue />)}
+            />
+
+            <Route
+              path="/reports"
+              element={admin(<Reports />)}
+            />
+
+            <Route
+              path="/staff"
+              element={admin(<Staff />)}
+            />
+
+            <Route
+              path="/profile"
+              element={anyUser(<Profile />)}
+            />
+
+            {/* =====================================================
+                TEACHER WORKSPACE ROUTES
+            ===================================================== */}
+
+            <Route
+              path="/teacher/dashboard"
+              element={teacherWorkspace(<TeacherDashboard />)}
+            />
+
+            <Route
+              path="/teacher/classes"
+              element={teacherWorkspace(<TeacherClasses />)}
+            />
+
+            <Route
+              path="/teacher/classes/:id"
+              element={teacherWorkspace(<ClassWorkspace />)}
+            />
+
+            <Route path="/teacher/classes/:id/students"
+              element={teacherWorkspace(<ClassStudents />)}
+            />
+
+            <Route path="/teacher/students/:id"
+              element={teacherWorkspace(<TeacherStudentProfile />)}
+            />
+
+            <Route path="/teacher/subjects"
+              element={teacherWorkspace(<TeacherSubjects />)}
+            />
+
+            <Route path="/teacher/profile"
+              element={teacherWorkspace(<TeacherProfile />)}
+            />
+
+            {/* =====================================================
+                AUTHENTICATION
+            ===================================================== */}
+
+            <Route
+              path="/verify-email"
+              element={<VerifyEmail />}
+            />
+
           </Routes>
         </BrowserRouter>
       </AuthProvider>
     </AlertProvider>
   );
 }
+
