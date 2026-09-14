@@ -13,6 +13,7 @@ import client from "../../api/client";
 
 const assessmentTypeLabels = {
   opener: "Opener",
+  cat: "CAT",
   mid_term: "Mid Term",
   end_term: "End Term",
 };
@@ -415,6 +416,7 @@ export default function TeacherAssessments() {
               >
                 <option value="all">All assessment types</option>
                 <option value="opener">Opener</option>
+                <option value="cat">CAT</option>
                 <option value="mid_term">Mid Term</option>
                 <option value="end_term">End Term</option>
               </select>

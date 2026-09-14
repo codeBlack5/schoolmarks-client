@@ -47,6 +47,7 @@ import TeacherClasses from "./pages/teacher/TeacherClasses";
 import ClassWorkspace from "./pages/teacher/ClassWorkspace";
 import ClassStudents from "./pages/teacher/ClassStudents";
 import TeacherStudentProfile from "./pages/teacher/TeacherStudentProfile";
+import TeacherStudentInterventions from "./pages/teacher/TeacherStudentInterventions";
 import TeacherSubjects from "./pages/teacher/TeacherSubjects";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
@@ -285,6 +286,10 @@ export default function App() {
 
             <Route path="/teacher/classes/:id/students"
               element={teacherWorkspace(<ClassStudents />)}
+            />
+
+            <Route path="/teacher/students/:id/interventions"
+              element={teacherWorkspace(<TeacherStudentInterventions />)}
             />
 
             <Route path="/teacher/students/:id"
