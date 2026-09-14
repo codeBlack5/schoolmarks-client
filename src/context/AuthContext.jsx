@@ -6,6 +6,13 @@ const AuthContext = createContext(null);
 
 const ADMIN_LEVEL_ROLES = ["admin", "headteacher", "deputy", "dos"];
 
+const TEACHER_WORKSPACE_ROLES = [
+  "teacher",
+  "headteacher",
+  "deputy",
+  "dos",
+];
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("user");
@@ -65,6 +72,8 @@ export function AuthProvider({ children }) {
   // Admin access inside a school workspace
   const isAdmin = ADMIN_LEVEL_ROLES.includes(user?.role);
 
+  const isTeacherWorkspaceUser = TEACHER_WORKSPACE_ROLES.includes(user?.role);
+
   // System Admin check: User has an admin role and is not permanently tied to a single school_id
   const isSystemAdmin = Boolean(user && !user.school_id && (user.role === "admin" || user.role === "system_admin"));
 
@@ -93,6 +102,7 @@ export function AuthProvider({ children }) {
         logout,
         isAdmin,
         isSystemAdmin,
+        isTeacherWorkspaceUser,
         activeTenant,
         switchTenant,
         updateStoredUser,

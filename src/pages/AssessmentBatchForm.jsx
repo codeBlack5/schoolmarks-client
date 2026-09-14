@@ -5,6 +5,7 @@ import { useAlert } from "../context/AlertContext";
 
 const TYPES = [
   { value: "opener", label: "Opener Exam" },
+  { value: "cat", label: "CAT" },
   { value: "mid_term", label: "Mid-Term Exam" },
   { value: "end_term", label: "End-Term Exam" },
 ];

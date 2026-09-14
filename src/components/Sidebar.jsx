@@ -1,10 +1,33 @@
 // src/components/Sidebar.jsx
-import { NavLink } from "react-router-dom";
+
+import {
+  NavLink,
+  useLocation,
+} from "react-router-dom";
+
+import {
+  LayoutDashboard,
+  GraduationCap,
+  BookOpen,
+  Users,
+  ClipboardCheck,
+  PenLine,
+  ClipboardList,
+  CalendarDays,
+  Library,
+  BarChart3,
+  FileText,
+  Bell,
+  UserCircle,
+} from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
 
 const linkClass = ({ isActive }) =>
   `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-    isActive ? "bg-slate-100 text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-50"
+    isActive
+      ? "bg-slate-100 text-slate-900 font-semibold"
+      : "text-slate-600 hover:bg-slate-50"
   }`;
 
 const ROLE_LABELS = {
@@ -15,18 +38,132 @@ const ROLE_LABELS = {
   teacher: "Teacher",
 };
 
-export default function Sidebar({ open, onClose }) {
-  const { user, school, logout, isAdmin, isSystemAdmin, activeTenant } = useAuth();
+const TEACHER_WORKSPACE_ROLES = [
+  "teacher",
+  "headteacher",
+  "deputy",
+  "dos",
+];
 
-  // Show platform-level links if user is a System Admin not actively inspecting a specific school
+const teacherNavItems = [
+  {
+    label: "Dashboard",
+    path: "/teacher/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "My Classes",
+    path: "/teacher/classes",
+    icon: GraduationCap,
+  },
+  {
+    label: "My Subjects",
+    path: "/teacher/subjects",
+    icon: BookOpen,
+  },
+  {
+    label: "Students",
+    path: "/teacher/students",
+    icon: Users,
+  },
+  {
+    label: "Assessments",
+    path: "/teacher/assessments",
+    icon: ClipboardCheck,
+  },
+  {
+    label: "Mark Entry",
+    path: "/teacher/mark-entry",
+    icon: PenLine,
+  },
+  {
+    label: "Attendance",
+    path: "/teacher/attendance",
+    icon: ClipboardList,
+  },
+  {
+    label: "Lesson Plans",
+    path: "/teacher/lesson-plans",
+    icon: CalendarDays,
+  },
+  {
+    label: "Resources",
+    path: "/teacher/resources",
+    icon: Library,
+  },
+  {
+    label: "Assignments",
+    path: "/teacher/assignments",
+    icon: ClipboardList,
+  },
+  {
+    label: "Analytics",
+    path: "/teacher/analytics",
+    icon: BarChart3,
+  },
+  {
+    label: "Reports",
+    path: "/teacher/reports",
+    icon: FileText,
+  },
+  {
+    label: "Notifications",
+    path: "/teacher/notifications",
+    icon: Bell,
+  },
+  {
+    label: "My Profile",
+    path: "/teacher/profile",
+    icon: UserCircle,
+  },
+];
+
+export default function Sidebar({ open, onClose }) {
+  const {
+    user,
+    school,
+    logout,
+    isAdmin,
+    isSystemAdmin,
+    activeTenant,
+  } = useAuth();
+
+  const location = useLocation();
+
+  /*
+   * Show platform-level links if user is a System Admin
+   * not actively inspecting a specific school.
+   */
   const isPlatformView = isSystemAdmin && !activeTenant;
 
-  // Display role label appropriately
+  /*
+   * Teacher Workspace users:
+   * teacher, headteacher, deputy and DOS.
+   */
+  const isTeacherWorkspaceUser = TEACHER_WORKSPACE_ROLES.includes(
+    user?.role
+  );
+
+  /*
+   * We determine the workspace from the URL rather than
+   * the role alone. This is important for headteachers,
+   * deputies and DOS users because they can move between
+   * the admin dashboard and Teacher Workspace.
+   */
+  const isTeacherWorkspace =
+    isTeacherWorkspaceUser &&
+    location.pathname.startsWith("/teacher");
+
+  /*
+   * Display role label appropriately.
+   */
   const roleDisplay = isPlatformView
     ? "Platform Admin"
     : ROLE_LABELS[user?.role] || user?.role;
 
-  // Determine logo URL if available
+  /*
+   * Determine logo URL if available.
+   */
   const schoolLogo = school?.logo_url || school?.logo;
 
   return (
@@ -49,18 +186,28 @@ export default function Sidebar({ open, onClose }) {
           ) : (
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-              style={{ backgroundColor: "var(--color-navy, #0f172a)" }}
+              style={{
+                backgroundColor: "var(--color-navy, #0f172a)",
+              }}
             >
-              {school?.name?.[0]?.toUpperCase() || (isPlatformView ? "P" : "S")}
+              {school?.name?.[0]?.toUpperCase() ||
+                (isPlatformView ? "P" : "S")}
             </div>
           )}
 
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold leading-tight" style={{ color: "var(--color-navy)" }}>
+            <h1
+              className="text-sm font-semibold leading-tight"
+              style={{ color: "var(--color-navy)" }}
+            >
               Steelo Analytics
             </h1>
+
             <p className="text-xs text-slate-500 truncate">
-              {school?.name || (isPlatformView ? "Global Platform" : "School Portal")}
+              {school?.name ||
+                (isPlatformView
+                  ? "Global Platform"
+                  : "School Portal")}
             </p>
           </div>
         </div>
@@ -82,20 +229,77 @@ export default function Sidebar({ open, onClose }) {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {isPlatformView ? (
-          /* --- System Admin Platform Links --- */
+          /*
+           * =====================================================
+           * SYSTEM ADMIN PLATFORM NAVIGATION
+           * =====================================================
+           */
           <>
             <div className="pt-1 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
               Platform Admin
             </div>
-            <NavLink to="/admin/schools" className={linkClass} onClick={onClose}>
+
+            <NavLink
+              to="/admin/schools"
+              className={linkClass}
+              onClick={onClose}
+            >
               🏫 Schools Directory
             </NavLink>
-            <NavLink to="/admin/schools/new" className={linkClass} onClick={onClose}>
+
+            <NavLink
+              to="/admin/schools/new"
+              className={linkClass}
+              onClick={onClose}
+            >
               ➕ Onboard New School
             </NavLink>
           </>
+        ) : isTeacherWorkspace ? (
+          /*
+           * =====================================================
+           * TEACHER WORKSPACE NAVIGATION
+           * =====================================================
+           */
+          <>
+            <div className="pt-1 pb-2 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              Teacher Workspace
+            </div>
+
+            {teacherNavItems.map((item) => {
+              const Icon = item.icon;
+
+              const active =
+                location.pathname === item.path ||
+                location.pathname.startsWith(`${item.path}/`);
+
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-blue-50 text-blue-700 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon
+                    size={18}
+                    strokeWidth={active ? 2.2 : 1.8}
+                  />
+
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </>
         ) : (
-          /* --- School Workspace Links --- */
+          /*
+           * =====================================================
+           * EXISTING SCHOOL / ADMIN NAVIGATION
+           * =====================================================
+           */
           <>
             {/* Quick return button when System Admin is inspecting a tenant */}
             {isSystemAdmin && activeTenant && (
@@ -108,24 +312,125 @@ export default function Sidebar({ open, onClose }) {
               </NavLink>
             )}
 
-            {isAdmin && <NavLink to="/dashboard" className={linkClass} onClick={onClose}>Dashboard</NavLink>}
-            {isAdmin && <NavLink to="/assessments" className={linkClass} onClick={onClose}>Assessments</NavLink>}
-            {isAdmin && <NavLink to="/reports" className={linkClass} onClick={onClose}>Reports</NavLink>}
-            {isAdmin && <NavLink to="/edit-requests" className={linkClass} onClick={onClose}>Edit Requests</NavLink>}
-            {!isAdmin && <NavLink to="/my-classes" className={linkClass} onClick={onClose}>My Classes</NavLink>}
+            {isAdmin && (
+              <NavLink
+                to="/dashboard"
+                className={linkClass}
+                onClick={onClose}
+              >
+                Dashboard
+              </NavLink>
+            )}
+
+            <NavLink
+              to="/teacher/analytics"
+              className={linkClass}
+              onClick={onClose}
+            >
+              Analytics
+            </NavLink>
+
+            {isAdmin && (
+              <NavLink
+                to="/assessments"
+                className={linkClass}
+                onClick={onClose}
+              >
+                Assessments
+              </NavLink>
+            )}
+
+            {isAdmin && (
+              <NavLink
+                to="/reports"
+                className={linkClass}
+                onClick={onClose}
+              >
+                Reports
+              </NavLink>
+            )}
+
+            {isAdmin && (
+              <NavLink
+                to="/edit-requests"
+                className={linkClass}
+                onClick={onClose}
+              >
+                Edit Requests
+              </NavLink>
+            )}
+
+            {!isAdmin && (
+              <NavLink
+                to="/my-classes"
+                className={linkClass}
+                onClick={onClose}
+              >
+                My Classes
+              </NavLink>
+            )}
 
             {isAdmin && (
               <>
                 <div className="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
                   Setup
                 </div>
-                <NavLink to="/grades" className={linkClass} onClick={onClose}>Grades</NavLink>
-                <NavLink to="/subjects" className={linkClass} onClick={onClose}>Subjects</NavLink>
-                <NavLink to="/students" className={linkClass} onClick={onClose}>Students</NavLink>
-                <NavLink to="/terms" className={linkClass} onClick={onClose}>Terms</NavLink>
-                <NavLink to="/teachers" className={linkClass} onClick={onClose}>Teachers</NavLink>
-                <NavLink to="/assignments" className={linkClass} onClick={onClose}>Assignments</NavLink>
-                <NavLink to="/staff" className={linkClass} onClick={onClose}>Staff</NavLink>
+
+                <NavLink
+                  to="/grades"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Grades
+                </NavLink>
+
+                <NavLink
+                  to="/subjects"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Subjects
+                </NavLink>
+
+                <NavLink
+                  to="/students"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Students
+                </NavLink>
+
+                <NavLink
+                  to="/terms"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Terms
+                </NavLink>
+
+                <NavLink
+                  to="/teachers"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Teachers
+                </NavLink>
+
+                <NavLink
+                  to="/assignments"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Assignments
+                </NavLink>
+
+                <NavLink
+                  to="/staff"
+                  className={linkClass}
+                  onClick={onClose}
+                >
+                  Staff
+                </NavLink>
               </>
             )}
           </>
@@ -134,7 +439,24 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Footer Navigation */}
       <div className="space-y-1 pt-2 border-t border-slate-100">
-        <NavLink to="/profile" className={linkClass} onClick={onClose}>My Profile</NavLink>
+        {isTeacherWorkspace ? (
+          <NavLink
+            to="/teacher/profile"
+            className={linkClass}
+            onClick={onClose}
+          >
+            My Profile
+          </NavLink>
+        ) : (
+          <NavLink
+            to="/profile"
+            className={linkClass}
+            onClick={onClose}
+          >
+            My Profile
+          </NavLink>
+        )}
+
         <button
           onClick={logout}
           className="w-full text-sm text-left px-3 py-2 rounded-md text-slate-500 hover:bg-slate-50"
