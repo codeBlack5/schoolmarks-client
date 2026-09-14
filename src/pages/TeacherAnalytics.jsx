@@ -12,6 +12,7 @@ export default function TeacherAnalytics() {
   const [terms, setTerms] = useState([]);
   const [grades, setGrades] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [allTeacherSubjects, setAllTeacherSubjects] = useState([]);
 
   const [termId, setTermId] = useState("");
   const [gradeId, setGradeId] = useState("");
@@ -26,29 +27,37 @@ export default function TeacherAnalytics() {
     error: analyticsError,
     exporting,
     exportPdf,
+    refetch,
   } = useTeacherAnalytics({
     termId,
     gradeId,
     subjectId,
   });
 
-  // Load filter data
+  // Load teacher workspace filter data.
   useEffect(() => {
     async function loadFilters() {
       setFiltersLoading(true);
       setFiltersError("");
 
       try {
-        const [termsResponse, gradesResponse] = await Promise.all([
-          client.get("/terms"),
-          client.get("/grades"),
-        ]);
+        const [termsResponse, classesResponse, subjectsResponse] =
+          await Promise.all([
+            client.get("/terms"),
+            client.get("/teacher/classes"),
+            client.get("/teacher/subjects"),
+          ]);
 
         const loadedTerms = termsResponse.data || [];
-        const loadedGrades = gradesResponse.data || [];
+        const loadedGrades = classesResponse.data?.classes || [];
+        const loadedSubjects = subjectsResponse.data?.subjects || [];
 
         setTerms(loadedTerms);
         setGrades(loadedGrades);
+        setAllTeacherSubjects(loadedSubjects);
+
+        // Subjects are initially empty until a grade is selected.
+        setSubjects([]);
 
         // Select the most recent term by default.
         if (loadedTerms.length > 0) {
@@ -68,7 +77,7 @@ export default function TeacherAnalytics() {
         setFiltersError(
           err.response?.data?.errors?.join(", ") ||
             err.response?.data?.error ||
-            "Failed to load terms and grades."
+            "Failed to load analytics filters."
         );
       } finally {
         setFiltersLoading(false);
@@ -78,27 +87,22 @@ export default function TeacherAnalytics() {
     loadFilters();
   }, []);
 
-  // Load subjects whenever the selected grade changes.
+  // Load subjects available within the selected teacher workspace grade.
   useEffect(() => {
-    async function loadSubjects() {
-      setSubjectId("");
+    setSubjectId("");
 
-      if (!gradeId) {
-        setSubjects([]);
-        return;
-      }
-
-      try {
-        const response = await client.get(`/grades/${gradeId}/subjects`);
-        setSubjects(response.data || []);
-      } catch (err) {
-        console.error("Failed to load subjects:", err);
-        setSubjects([]);
-      }
+    if (!gradeId) {
+      setSubjects([]);
+      return;
     }
 
-    loadSubjects();
-  }, [gradeId]);
+    const gradeSubjects = allTeacherSubjects.filter(
+      (subject) =>
+        String(subject.grade?.id) === String(gradeId)
+    );
+
+    setSubjects(gradeSubjects);
+  }, [gradeId, allTeacherSubjects]);
 
   const selectedTerm = useMemo(
     () => terms.find((term) => String(term.id) === String(termId)),
@@ -226,7 +230,7 @@ export default function TeacherAnalytics() {
               onChange={handleGradeChange}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
-              <option value="">All grades</option>
+              <option value="">All my classes</option>
 
               {grades.map((grade) => (
                 <option key={grade.id} value={grade.id}>
@@ -408,7 +412,7 @@ export default function TeacherAnalytics() {
           />
 
           <PerformanceDistribution
-            distribution={data.performance_distribution || []}
+            distribution={data.performance_distribution || {}}
           />
 
           <StudentPerformanceRanking

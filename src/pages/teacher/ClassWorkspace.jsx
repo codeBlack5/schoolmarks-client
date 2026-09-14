@@ -417,20 +417,34 @@ function SectionHeader({
 function AssessmentRow({ assessment }) {
   const complete = assessment.marking_complete;
 
+  const processed =
+    assessment.marking?.processed ??
+    assessment.marked_count ??
+    0;
+
+  const scored =
+    assessment.marking?.scored ??
+    0;
+
+  const absent =
+    assessment.marking?.absent ??
+    0;
+
+  const incomplete =
+    assessment.marking?.incomplete ??
+    0;
+
   const percentage =
-    assessment.students_count > 0
+    assessment.marking?.processing_percentage ??
+    (assessment.students_count > 0
       ? Math.round(
-          (assessment.marked_count /
-            assessment.students_count) *
-            100
+          (processed / assessment.students_count) * 100
         )
-      : 0;
+      : 0);
 
   return (
     <div className="p-5">
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
         <div>
           <h3 className="font-medium text-gray-900">
             {assessment.name}
@@ -458,15 +472,12 @@ function AssessmentRow({ assessment }) {
 
           {complete ? "Complete" : "Pending"}
         </div>
-
       </div>
 
       <div className="mt-4">
-
         <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
           <span>
-            {assessment.marked_count} /{" "}
-            {assessment.students_count} marked
+            {processed} / {assessment.students_count} processed
           </span>
 
           <span>{percentage}%</span>
@@ -480,7 +491,20 @@ function AssessmentRow({ assessment }) {
             }}
           />
         </div>
+      </div>
 
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+        <span>
+          <strong className="text-gray-700">{scored}</strong> scored
+        </span>
+
+        <span>
+          <strong className="text-gray-700">{absent}</strong> absent
+        </span>
+
+        <span>
+          <strong className="text-gray-700">{incomplete}</strong> incomplete
+        </span>
       </div>
 
       <div className="mt-4">
@@ -495,7 +519,6 @@ function AssessmentRow({ assessment }) {
           <ChevronRight size={16} />
         </Link>
       </div>
-
     </div>
   );
 }

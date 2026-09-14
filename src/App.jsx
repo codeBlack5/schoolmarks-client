@@ -49,6 +49,8 @@ import ClassStudents from "./pages/teacher/ClassStudents";
 import TeacherStudentProfile from "./pages/teacher/TeacherStudentProfile";
 import TeacherSubjects from "./pages/teacher/TeacherSubjects";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
+import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import TeacherAssessments from "./pages/teacher/TeacherAssessments";
 
 function Home() {
   const {
@@ -183,6 +185,11 @@ export default function App() {
             />
 
             <Route
+              path="/teacher/analytics"
+              element={anyUser(<TeacherAnalytics />)}
+            />
+
+            <Route
               path="/teacher-analytics"
               element={anyUser(<TeacherAnalytics />)}
             />
@@ -292,6 +299,13 @@ export default function App() {
               element={teacherWorkspace(<TeacherProfile />)}
             />
 
+            <Route path="/teacher/attendance"
+              element={teacherWorkspace(<TeacherAttendance />)}
+            />
+
+            <Route path="/teacher/assessments"
+              element={teacherWorkspace(<TeacherAssessments />)}
+            />
             {/* =====================================================
                 AUTHENTICATION
             ===================================================== */}

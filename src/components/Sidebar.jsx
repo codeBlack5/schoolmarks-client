@@ -323,7 +323,7 @@ export default function Sidebar({ open, onClose }) {
             )}
 
             <NavLink
-              to="/teacher-analytics"
+              to="/teacher/analytics"
               className={linkClass}
               onClick={onClose}
             >
