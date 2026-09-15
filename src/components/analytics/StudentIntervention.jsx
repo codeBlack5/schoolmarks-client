@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function StudentIntervention({
   decliningStudents = [],
@@ -137,6 +138,10 @@ function DecliningStudents({ students }) {
               <th className="px-4 py-3 text-left font-semibold">
                 Assessments
               </th>
+
+              <th className="px-4 py-3 text-right font-semibold">
+                Action
+              </th>
             </tr>
           </thead>
 
@@ -189,6 +194,16 @@ function DecliningStudents({ students }) {
                 <td className="px-4 py-3 text-slate-500">
                   {student.previous_assessment} →{" "}
                   {student.current_assessment}
+                </td>
+
+                <td className="px-4 py-3 text-right">
+                  <Link
+                    to={`/teacher/students/${student.student_id}/interventions?subject_id=${student.subject_id}&reason=decline&baseline_score=${student.current_score}`}
+                    className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90"
+                    style={{ backgroundColor: "var(--color-navy)" }}
+                  >
+                    Review / Intervene
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -271,6 +286,9 @@ function InterventionStudents({ students }) {
               <th className="px-4 py-3 text-left font-semibold">
                 Learning Areas Requiring Support
               </th>
+              <th className="px-4 py-3 text-right font-semibold">
+                Action
+              </th>
             </tr>
           </thead>
 
@@ -319,6 +337,26 @@ function InterventionStudents({ students }) {
                       </span>
                     ))}
                   </div>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {student.subjects?.length > 0 ? (
+                    <div className="flex flex-col items-end gap-2">
+                      {student.subjects.map((subject) => (
+                        <Link
+                          key={subject.subject_id}
+                          to={`/teacher/students/${student.student_id}/interventions?subject_id=${subject.subject_id}&reason=below_target&baseline_score=${subject.mean_score}&target_score=50`}
+                          className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90"
+                          style={{ backgroundColor: "var(--color-navy)" }}
+                        >
+                          Intervene
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400">
+                      No subject identified
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

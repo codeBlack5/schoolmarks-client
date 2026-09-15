@@ -52,6 +52,8 @@ import TeacherSubjects from "./pages/teacher/TeacherSubjects";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherAssessments from "./pages/teacher/TeacherAssessments";
+import TeacherStudents from "./pages/teacher/TeacherStudents";
+import TeacherMarkEntry from "./pages/teacher/TeacherMarkEntry";
 
 function Home() {
   const {
@@ -85,8 +87,12 @@ function Home() {
   );
 }
 
-function withLayout(element) {
-  return <Layout>{element}</Layout>;
+function withLayout(element, contentClassName = "") {
+  return (
+    <Layout contentClassName={contentClassName}>
+      {element}
+    </Layout>
+  );
 }
 
 // System administrator routes
@@ -120,7 +126,21 @@ function anyUser(element) {
 function teacherWorkspace(element) {
   return (
     <ProtectedRoute teacherWorkspaceOnly>
-      {withLayout(element)}
+      {withLayout(
+        element,
+        "px-4 py-5 sm:px-6 lg:px-8"
+      )}
+    </ProtectedRoute>
+  );
+}
+
+function analyticsWorkspace(element) {
+  return (
+    <ProtectedRoute analyticsOnly>
+      {withLayout(
+        element,
+        "px-4 py-5 sm:px-6 lg:px-8"
+      )}
     </ProtectedRoute>
   );
 }
@@ -186,8 +206,13 @@ export default function App() {
             />
 
             <Route
+              path="/teacher/mark-entry/:assessmentId"
+              element={teacherWorkspace(<MarkEntryGrid />)}
+            />
+
+            <Route
               path="/teacher/analytics"
-              element={anyUser(<TeacherAnalytics />)}
+              element={analyticsWorkspace(<TeacherAnalytics />)}
             />
 
             <Route
@@ -292,6 +317,11 @@ export default function App() {
               element={teacherWorkspace(<TeacherStudentInterventions />)}
             />
 
+            <Route
+              path="/teacher/students"
+              element={teacherWorkspace(<TeacherStudents />)}
+            />
+
             <Route path="/teacher/students/:id"
               element={teacherWorkspace(<TeacherStudentProfile />)}
             />
@@ -311,6 +341,12 @@ export default function App() {
             <Route path="/teacher/assessments"
               element={teacherWorkspace(<TeacherAssessments />)}
             />
+
+            <Route
+              path="/teacher/mark-entry"
+              element={teacherWorkspace(<TeacherMarkEntry />)}
+            />
+
             {/* =====================================================
                 AUTHENTICATION
             ===================================================== */}

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import client from "../api/client";
 import { useTeacherAnalytics } from "../hooks/useTeacherAnalytics";
 import LearningAreaPerformance from "../components/analytics/LearningAreaPerformance";
@@ -9,6 +11,19 @@ import StudentIntervention from "../components/analytics/StudentIntervention";
 
 
 export default function TeacherAnalytics() {
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+
+  const urlTermId = searchParams.get("term_id");
+  const urlGradeId = searchParams.get("grade_id");
+  const urlSubjectId = searchParams.get("subject_id");
+  const isAdminLevel = [
+  "admin",
+  "headteacher",
+  "deputy",
+  "dos",
+].includes(user?.role);
+  
   const [terms, setTerms] = useState([]);
   const [grades, setGrades] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -41,16 +56,38 @@ export default function TeacherAnalytics() {
       setFiltersError("");
 
       try {
-        const [termsResponse, classesResponse, subjectsResponse] =
-          await Promise.all([
-            client.get("/terms"),
+        const requests = [
+          client.get("/terms"),
+        ];
+
+        if (isAdminLevel) {
+          requests.push(
+            client.get("/grades")
+          );
+        } else {
+          requests.push(
             client.get("/teacher/classes"),
-            client.get("/teacher/subjects"),
-          ]);
+            client.get("/teacher/subjects")
+          );
+        }
+
+        const responses = await Promise.all(requests);
+
+        const termsResponse = responses[0];
+        const gradesResponse = responses[1];
+        const subjectsResponse = isAdminLevel
+          ? null
+          : responses[2];
 
         const loadedTerms = termsResponse.data || [];
-        const loadedGrades = classesResponse.data?.classes || [];
-        const loadedSubjects = subjectsResponse.data?.subjects || [];
+
+        const loadedGrades = isAdminLevel
+          ? gradesResponse.data || []
+          : gradesResponse.data?.classes || [];
+
+        const loadedSubjects = isAdminLevel
+        ? []
+        : subjectsResponse.data?.subjects || [];
 
         setTerms(loadedTerms);
         setGrades(loadedGrades);
@@ -59,8 +96,11 @@ export default function TeacherAnalytics() {
         // Subjects are initially empty until a grade is selected.
         setSubjects([]);
 
-        // Select the most recent term by default.
-        if (loadedTerms.length > 0) {
+        // Prefer context supplied by another teacher workflow,
+        // such as Mark Entry. Otherwise use the most recent term.
+        if (urlTermId) {
+          setTermId(String(urlTermId));
+        } else if (loadedTerms.length > 0) {
           const sortedTerms = [...loadedTerms].sort((a, b) => {
             if (Number(b.year) !== Number(a.year)) {
               return Number(b.year) - Number(a.year);
@@ -70,6 +110,10 @@ export default function TeacherAnalytics() {
           });
 
           setTermId(String(sortedTerms[0].id));
+        }
+
+        if (urlGradeId) {
+          setGradeId(String(urlGradeId));
         }
       } catch (err) {
         console.error("Failed to load analytics filters:", err);
@@ -85,24 +129,80 @@ export default function TeacherAnalytics() {
     }
 
     loadFilters();
-  }, []);
+  }, [isAdminLevel]);
 
   // Load subjects available within the selected teacher workspace grade.
   useEffect(() => {
-    setSubjectId("");
+    async function loadSubjectsForGrade() {
+      if (!gradeId) {
+        setSubjects([]);
+        setSubjectId("");
+        return;
+      }
 
-    if (!gradeId) {
-      setSubjects([]);
-      return;
+      try {
+        if (isAdminLevel) {
+          const response = await client.get(
+            `/grades/${gradeId}/subjects`
+          );
+
+          const gradeSubjects = response.data || [];
+
+          setSubjects(gradeSubjects);
+
+          if (urlSubjectId) {
+            const subjectExists = gradeSubjects.some(
+              (subject) =>
+                String(subject.id) === String(urlSubjectId)
+            );
+
+            setSubjectId(
+              subjectExists ? String(urlSubjectId) : ""
+            );
+          } else {
+            setSubjectId("");
+          }
+
+          return;
+        }
+
+        const gradeSubjects = allTeacherSubjects.filter(
+          (subject) =>
+            String(subject.grade?.id) === String(gradeId)
+        );
+
+        setSubjects(gradeSubjects);
+
+        if (urlSubjectId) {
+          const subjectExists = gradeSubjects.some(
+            (subject) =>
+              String(subject.id) === String(urlSubjectId)
+          );
+
+          setSubjectId(
+            subjectExists ? String(urlSubjectId) : ""
+          );
+        } else {
+          setSubjectId("");
+        }
+      } catch (err) {
+        console.error(
+          "Failed to load analytics subjects:",
+          err
+        );
+
+        setSubjects([]);
+        setSubjectId("");
+      }
     }
 
-    const gradeSubjects = allTeacherSubjects.filter(
-      (subject) =>
-        String(subject.grade?.id) === String(gradeId)
-    );
-
-    setSubjects(gradeSubjects);
-  }, [gradeId, allTeacherSubjects]);
+    loadSubjectsForGrade();
+  }, [
+    gradeId,
+    allTeacherSubjects,
+    urlSubjectId,
+    isAdminLevel,
+  ]);
 
   const selectedTerm = useMemo(
     () => terms.find((term) => String(term.id) === String(termId)),
@@ -230,7 +330,9 @@ export default function TeacherAnalytics() {
               onChange={handleGradeChange}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
-              <option value="">All my classes</option>
+              <option value="">
+                {isAdminLevel ? "All grades" : "All my classes"}
+              </option>
 
               {grades.map((grade) => (
                 <option key={grade.id} value={grade.id}>

@@ -8,10 +8,19 @@ const TEACHER_WORKSPACE_ROLES = [
   "dos",
 ];
 
+const ANALYTICS_ROLES = [
+  "teacher",
+  "admin",
+  "headteacher",
+  "deputy",
+  "dos",
+];
+
 export default function ProtectedRoute({
   adminOnly = false,
   systemAdminOnly = false,
   teacherWorkspaceOnly = false,
+  analyticsOnly = false,
   children,
 }) {
   const {
@@ -43,6 +52,13 @@ export default function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (
+    analyticsOnly &&
+    !ANALYTICS_ROLES.includes(user.role)
+  ) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   if (adminOnly && !isAdmin && !isSystemAdmin) {
     return <Navigate to="/teacher/dashboard" replace />;
   }
