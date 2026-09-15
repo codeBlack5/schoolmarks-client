@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
@@ -57,6 +57,12 @@ const EMPTY_FORM = {
 
 export default function TeacherStudentInterventions() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const prefillSubjectId = searchParams.get("subject_id");
+  const prefillReason = searchParams.get("reason");
+  const prefillBaseline = searchParams.get("baseline_score");
+  const prefillTarget = searchParams.get("target_score");
 
   const [student, setStudent] = useState(null);
   const [interventions, setInterventions] = useState([]);
@@ -165,14 +171,57 @@ export default function TeacherStudentInterventions() {
 
   function openCreateForm() {
     setEditingId(null);
+
+    let reason = "";
+    let baselineScore = "";
+
+    if (prefillReason === "decline") {
+      reason =
+        "Significant performance decline between consecutive assessments.";
+    } else if (prefillReason === "below_target") {
+      reason =
+        "Performance below the 50% target in this learning area.";
+    } else if (prefillReason) {
+      reason = prefillReason;
+    }
+
+    if (prefillBaseline !== null && prefillBaseline !== "") {
+      baselineScore = prefillBaseline;
+    }
+
     setForm({
       ...EMPTY_FORM,
+      subject_id: prefillSubjectId || "",
+      reason,
+      baseline_score: baselineScore,
+      target_score: prefillTarget || "",
       start_date: todayString(),
     });
+
     setError("");
     setSuccess("");
     setShowForm(true);
   }
+
+  useEffect(() => {
+    if (loading || !student) return;
+
+    if (
+      prefillSubjectId ||
+      prefillReason ||
+      prefillBaseline ||
+      prefillTarget
+    ) {
+      openCreateForm();
+    }
+  }, [
+    loading,
+    student,
+    prefillSubjectId,
+    prefillReason,
+    prefillBaseline,
+    prefillTarget,
+  ]);
 
   function openEditForm(intervention) {
     setEditingId(intervention.id);
@@ -474,16 +523,6 @@ async function handleReviewSubmit(event) {
             size={28}
             className="animate-spin text-blue-600"
           />
-                  {reviewingIntervention && (
-          <InterventionReviewForm
-            intervention={reviewingIntervention}
-            form={reviewForm}
-            saving={reviewSaving}
-            onChange={updateReviewField}
-            onSubmit={handleReviewSubmit}
-            onCancel={closeReviewForm}
-          />
-        )}
         </div>
       </PageShell>
     );
@@ -634,6 +673,16 @@ async function handleReviewSubmit(event) {
               />
             ))}
           </div>
+        )}
+        {reviewingIntervention && (
+          <InterventionReviewForm
+            intervention={reviewingIntervention}
+            form={reviewForm}
+            saving={reviewSaving}
+            onChange={updateReviewField}
+            onSubmit={handleReviewSubmit}
+            onCancel={closeReviewForm}
+          />
         )}
       </div>
     </PageShell>

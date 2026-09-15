@@ -75,7 +75,7 @@ export default function TeacherAttendance() {
         setLoadingGrades(true);
         setError("");
 
-        const response = await client.get("/teacher/classes");
+        const response = await client.get("/teacher/attendance/classes");
 
         if (!mounted) return;
 
@@ -138,7 +138,7 @@ export default function TeacherAttendance() {
           (response.data?.students || []).map((student) => ({
             ...student,
             attendance_status:
-              student.attendance?.status || "present",
+              student.attendance?.status || "",
           }))
         );
       } catch (err) {
@@ -168,13 +168,15 @@ export default function TeacherAttendance() {
     return students.reduce(
       (result, student) => {
         const status = student.attendance_status;
-
-        if (result[status] !== undefined) {
-          result[status] += 1;
-        }
-
+  
+        if (status === "present") result.present += 1;
+        if (status === "absent") result.absent += 1;
+        if (status === "late") result.late += 1;
+        if (status === "excused") result.excused += 1;
+        if (!status) result.unmarked += 1;
+  
         result.total += 1;
-
+  
         return result;
       },
       {
@@ -182,6 +184,7 @@ export default function TeacherAttendance() {
         absent: 0,
         late: 0,
         excused: 0,
+        unmarked: 0,
         total: 0,
       }
     );
@@ -216,6 +219,18 @@ export default function TeacherAttendance() {
   async function handleSaveAttendance() {
     if (!selectedGradeId || students.length === 0) return;
 
+    if (summary.unmarked > 0) {
+      setError(
+        `${summary.unmarked} student${
+          summary.unmarked === 1 ? "" : "s"
+        } still ${
+          summary.unmarked === 1 ? "has" : "have"
+        } no attendance status. Please mark everyone before saving.`
+      );
+      setSuccess("");
+      return;
+    }
+  
     try {
       setSaving(true);
       setError("");
@@ -406,11 +421,18 @@ export default function TeacherAttendance() {
 
         {/* Summary */}
         {!loadingAttendance && students.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
             <SummaryCard
               label="Total"
               value={summary.total}
               icon={Users}
+            />
+
+            <SummaryCard
+              label="Unmarked"
+              value={summary.unmarked}
+              icon={AlertCircle}
+              valueClassName="text-slate-600"
             />
 
             <SummaryCard
@@ -442,7 +464,6 @@ export default function TeacherAttendance() {
             />
           </div>
         )}
-
         {/* Loading roster */}
         {loadingAttendance && (
           <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
@@ -614,10 +635,14 @@ export default function TeacherAttendance() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
                 <div className="text-xs text-slate-500">
-                  <span className="font-medium text-slate-700">
-                    {summary.total}
-                  </span>{" "}
-                  students marked for{" "}
+                <span className="font-medium text-slate-700">
+                  {summary.total - summary.unmarked}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-slate-700">
+                  {summary.total}
+                </span>{" "}
+                students marked for{" "}
                   <span className="font-medium text-slate-700">
                     {selectedDate}
                   </span>

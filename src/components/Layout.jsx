@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 
-export default function Layout({ children }) {
+export default function Layout({ children, contentClassName = "" }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,7 +27,9 @@ export default function Layout({ children }) {
           <span className="font-semibold text-sm" style={{ color: "var(--color-navy)" }}>Steelo Analytics</span>
         </header>
 
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className={`flex-1 min-w-0 ${contentClassName}`}>  
+          {children}
+        </main>
       </div>
     </div>
   );
