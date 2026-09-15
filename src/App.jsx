@@ -54,6 +54,7 @@ import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherAssessments from "./pages/teacher/TeacherAssessments";
 import TeacherStudents from "./pages/teacher/TeacherStudents";
 import TeacherMarkEntry from "./pages/teacher/TeacherMarkEntry";
+import TeacherLessonPlans from "./pages/teacher/TeacherLessonPlans";
 
 function Home() {
   const {
@@ -340,6 +341,11 @@ export default function App() {
 
             <Route path="/teacher/assessments"
               element={teacherWorkspace(<TeacherAssessments />)}
+            />
+            
+            <Route
+              path="/teacher/lesson-plans"
+              element={teacherWorkspace(<TeacherLessonPlans />)}
             />
 
             <Route
