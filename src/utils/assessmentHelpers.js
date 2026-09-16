@@ -55,7 +55,7 @@ export function getCompletionPercentage(marking) {
   );
 }
 
-// Group assessments by Grade → Term
+// Group assessments by Grade → Term → Assessment Type
 export function groupAssessments(assessments) {
   return assessments.reduce((groups, assessment) => {
     const grade =
@@ -64,15 +64,22 @@ export function groupAssessments(assessments) {
     const term =
       assessment.term?.name || "Unknown Term";
 
+    const type =
+      assessment.assessment_type || "other";
+
     if (!groups[grade]) {
       groups[grade] = {};
     }
 
     if (!groups[grade][term]) {
-      groups[grade][term] = [];
+      groups[grade][term] = {};
     }
 
-    groups[grade][term].push(assessment);
+    if (!groups[grade][term][type]) {
+      groups[grade][term][type] = [];
+    }
+
+    groups[grade][term][type].push(assessment);
 
     return groups;
   }, {});
