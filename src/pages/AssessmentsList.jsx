@@ -44,6 +44,11 @@ export default function AssessmentsList() {
     return saved ? JSON.parse(saved) : {};
   });
 
+  const [expandedTypes, setExpandedTypes] = useState(() => {
+    const saved = localStorage.getItem("assessment-expanded-types");
+    return saved ? JSON.parse(saved) : {};
+  });
+
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -61,7 +66,12 @@ export default function AssessmentsList() {
       "assessment-expanded-terms",
       JSON.stringify(expandedTerms)
     );
-  }, [expandedGrades, expandedTerms]);
+
+    localStorage.setItem(
+      "assessment-expanded-types",
+      JSON.stringify(expandedTypes)
+    );
+  }, [expandedGrades, expandedTerms, expandedTypes]);
 
   async function handleDelete(id, name) {
     const ok = await confirm({
@@ -100,7 +110,7 @@ export default function AssessmentsList() {
 
       Object.keys(groupedAssessments).forEach((grade) => {
         if (expanded[grade] === undefined) {
-          expanded[grade] = false; // collapsed by default
+          expanded[grade] = false;
         }
       });
 
@@ -110,15 +120,39 @@ export default function AssessmentsList() {
     setExpandedTerms((prev) => {
       const expanded = { ...prev };
 
-      Object.entries(groupedAssessments).forEach(([grade, terms]) => {
-        Object.keys(terms).forEach((term) => {
-          const key = `${grade}-${term}`;
+      Object.entries(groupedAssessments).forEach(
+        ([grade, terms]) => {
+          Object.keys(terms).forEach((term) => {
+            const key = `${grade}-${term}`;
 
-          if (expanded[key] === undefined) {
-            expanded[key] = false; // collapsed by default
-          }
-        });
-      });
+            if (expanded[key] === undefined) {
+              expanded[key] = false;
+            }
+          });
+        }
+      );
+
+      return expanded;
+    });
+
+    setExpandedTypes((prev) => {
+      const expanded = { ...prev };
+
+      Object.entries(groupedAssessments).forEach(
+        ([grade, terms]) => {
+          Object.entries(terms).forEach(
+            ([term, types]) => {
+              Object.keys(types).forEach((type) => {
+                const key = `${grade}-${term}-${type}`;
+
+                if (expanded[key] === undefined) {
+                  expanded[key] = false;
+                }
+              });
+            }
+          );
+        }
+      );
 
       return expanded;
     });
@@ -135,6 +169,15 @@ export default function AssessmentsList() {
     const key = `${grade}-${term}`;
 
     setExpandedTerms((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }
+
+  function toggleType(grade, term, type) {
+    const key = `${grade}-${term}-${type}`;
+
+    setExpandedTypes((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
@@ -197,6 +240,8 @@ export default function AssessmentsList() {
           toggleGrade={() => toggleGrade(grade)}
           expandedTerms={expandedTerms}
           toggleTerm={toggleTerm}
+          expandedTypes={expandedTypes}
+          toggleType={toggleType}
           getTermColor={getTermColor}
           renderMarkingBadge={renderMarkingBadge}
           handleDelete={handleDelete}

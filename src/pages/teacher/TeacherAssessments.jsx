@@ -22,6 +22,41 @@ function getAssessmentTypeLabel(type) {
   return assessmentTypeLabels[type] || type || "Assessment";
 }
 
+function groupAssessmentsByType(assessments) {
+  const groups = {};
+
+  assessments.forEach((assessment) => {
+    const type = assessment.assessment_type || "other";
+
+    if (!groups[type]) {
+      groups[type] = [];
+    }
+
+    groups[type].push(assessment);
+  });
+
+  return groups;
+}
+
+const assessmentTypeOrder = [
+  "opener",
+  "cat",
+  "mid_term",
+  "end_term",
+];
+
+function sortAssessmentTypes(types) {
+  return [...types].sort((a, b) => {
+    const indexA = assessmentTypeOrder.indexOf(a);
+    const indexB = assessmentTypeOrder.indexOf(b);
+
+    const orderA = indexA === -1 ? 999 : indexA;
+    const orderB = indexB === -1 ? 999 : indexB;
+
+    return orderA - orderB;
+  });
+}
+
 function getProgress(assessment) {
     const marking = assessment.marking;
   if (marking) {
@@ -206,6 +241,15 @@ export default function TeacherAssessments() {
       return matchesSubject && matchesType && matchesSearch;
     });
   }, [assessments, subjectFilter, typeFilter, search]);
+
+  const groupedAssessments = useMemo(() => {
+  const groups = groupAssessmentsByType(filteredAssessments);
+
+  return sortAssessmentTypes(Object.keys(groups)).map((type) => ({
+    type,
+    assessments: groups[type],
+  }));
+}, [filteredAssessments]);
 
   const statistics = useMemo(() => {
     const total = assessments.length;
@@ -444,11 +488,12 @@ export default function TeacherAssessments() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredAssessments.map((assessment) => (
-                <AssessmentCard
-                  key={assessment.id}
-                  assessment={assessment}
+            <div className="space-y-4">
+              {groupedAssessments.map(({ type, assessments }) => (
+                <AssessmentTypeGroup
+                  key={type}
+                  type={type}
+                  assessments={assessments}
                 />
               ))}
             </div>
@@ -472,6 +517,83 @@ function StatCard({ label, value }) {
       >
         {value}
       </p>
+    </div>
+  );
+}
+
+function AssessmentTypeGroup({ type, assessments }) {
+  const [open, setOpen] = useState(true);
+
+  const completed = assessments.filter(
+    (assessment) => assessment.marking_complete
+  ).length;
+
+  const total = assessments.length;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      {/* Group header */}
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+            style={{
+              backgroundColor: "var(--color-navy)",
+            }}
+          >
+            <ClipboardList
+              size={17}
+              className="text-white"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2
+                className="font-semibold"
+                style={{
+                  color: "var(--color-navy)",
+                }}
+              >
+                {getAssessmentTypeLabel(type)}
+              </h2>
+
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                {total} {total === 1 ? "assessment" : "assessments"}
+              </span>
+            </div>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {completed} of {total} complete
+            </p>
+          </div>
+        </div>
+
+        <ChevronRight
+          size={20}
+          className={`shrink-0 text-slate-400 transition-transform ${
+            open ? "rotate-90" : ""
+          }`}
+        />
+      </button>
+
+      {/* Group contents */}
+      {open && (
+        <div className="border-t border-slate-100 bg-slate-50/50 p-3 sm:p-4">
+          <div className="space-y-3">
+            {assessments.map((assessment) => (
+              <AssessmentCard
+                key={assessment.id}
+                assessment={assessment}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

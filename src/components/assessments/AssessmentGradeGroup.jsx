@@ -7,12 +7,19 @@ export default function AssessmentGradeGroup({
   toggleGrade,
   expandedTerms,
   toggleTerm,
+  expandedTypes,
+  toggleType,
   getTermColor,
   renderMarkingBadge,
   handleDelete,
 }) {
   const assessmentCount = Object.values(terms).reduce(
-    (sum, items) => sum + items.length,
+    (sum, types) =>
+      sum +
+      Object.values(types).reduce(
+        (typeSum, items) => typeSum + items.length,
+        0
+      ),
     0
   );
 
@@ -45,12 +52,12 @@ export default function AssessmentGradeGroup({
       <div
         className={`overflow-hidden transition-all duration-300 ${
           expanded
-            ? "max-h-[6000px] opacity-100"
+            ? "max-h-[10000px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
         <div className="space-y-4 bg-slate-50 p-4">
-          {Object.entries(terms).map(([term, items]) => {
+          {Object.entries(terms).map(([term, types]) => {
             const key = `${grade}-${term}`;
 
             return (
@@ -58,9 +65,11 @@ export default function AssessmentGradeGroup({
                 key={key}
                 grade={grade}
                 term={term}
-                items={items}
+                types={types}
                 expanded={expandedTerms[key]}
                 toggle={() => toggleTerm(grade, term)}
+                expandedTypes={expandedTypes}
+                toggleType={toggleType}
                 getTermColor={getTermColor}
                 renderMarkingBadge={renderMarkingBadge}
                 handleDelete={handleDelete}
