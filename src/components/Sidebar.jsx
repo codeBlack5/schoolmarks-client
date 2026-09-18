@@ -87,10 +87,16 @@ const teacherNavItems = [
     icon: CalendarDays,
   },
   {
+    label: "Calendar",
+    path: "/teacher/calendar",
+    icon: CalendarDays,
+  },
+  {
     label: "Schemes of Work",
     path: "/teacher/schemes",
     icon: BookOpen,
   },
+
   {
     label: "Resources",
     path: "/teacher/resources",
