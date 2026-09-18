@@ -55,6 +55,8 @@ import TeacherAssessments from "./pages/teacher/TeacherAssessments";
 import TeacherStudents from "./pages/teacher/TeacherStudents";
 import TeacherMarkEntry from "./pages/teacher/TeacherMarkEntry";
 import TeacherLessonPlans from "./pages/teacher/TeacherLessonPlans";
+import TeacherSchemes from "./pages/teacher/TeacherSchemes";
+import TeacherSchemeDetail from "./pages/teacher/TeacherSchemeDetail";
 
 function Home() {
   const {
@@ -347,7 +349,16 @@ export default function App() {
               path="/teacher/lesson-plans"
               element={teacherWorkspace(<TeacherLessonPlans />)}
             />
+            
+            <Route
+              path="/teacher/schemes"
+              element={teacherWorkspace(<TeacherSchemes />)}
+            />
 
+            <Route
+              path="/teacher/schemes/:id"
+              element={teacherWorkspace(<TeacherSchemeDetail />)}
+            />
             <Route
               path="/teacher/mark-entry"
               element={teacherWorkspace(<TeacherMarkEntry />)}
