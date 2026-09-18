@@ -58,6 +58,9 @@ import TeacherLessonPlans from "./pages/teacher/TeacherLessonPlans";
 import TeacherSchemes from "./pages/teacher/TeacherSchemes";
 import TeacherSchemeDetail from "./pages/teacher/TeacherSchemeDetail";
 import TeacherPlanningCalendar from "./pages/teacher/TeacherPlanningCalendar";
+import TeacherTimetable from "./pages/teacher/TeacherTimetable";
+import AdminTimetable from "./pages/AdminTimetable";
+import AdminTimetableEditor from "./pages/AdminTimetableEditor";
 
 function Home() {
   const {
@@ -290,6 +293,16 @@ export default function App() {
             />
 
             <Route
+              path="/timetable"
+              element={admin(<AdminTimetable />)}
+            />
+
+            <Route
+              path="/timetable/:id"
+              element={admin(<AdminTimetableEditor />)}
+            />
+
+            <Route
               path="/profile"
               element={anyUser(<Profile />)}
             />
@@ -359,6 +372,11 @@ export default function App() {
             <Route
               path="/teacher/calendar"
               element={teacherWorkspace(<TeacherPlanningCalendar />)}
+            />
+
+            <Route
+              path="/teacher/timetable"
+              element={teacherWorkspace(<TeacherTimetable />)}
             />
 
             <Route

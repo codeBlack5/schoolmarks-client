@@ -91,12 +91,16 @@ const teacherNavItems = [
     path: "/teacher/calendar",
     icon: CalendarDays,
   },
+  { 
+    label: "Timetable", 
+    path: "/teacher/timetable", 
+    icon: CalendarDays
+  },
   {
     label: "Schemes of Work",
     path: "/teacher/schemes",
     icon: BookOpen,
   },
-
   {
     label: "Resources",
     path: "/teacher/resources",
@@ -393,6 +397,14 @@ export default function Sidebar({ open, onClose }) {
                   onClick={onClose}
                 >
                   Grades
+                </NavLink>
+
+                <NavLink
+                  to="/timetable"
+                  className={linkClass}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span>Timetable</span>
                 </NavLink>
 
                 <NavLink
