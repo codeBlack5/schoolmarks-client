@@ -29,6 +29,14 @@ const initialEntry = {
   remarks: "",
 };
 
+const initialSchemeForm = {
+  grade_id: "",
+  subject_id: "",
+  term_id: "",
+  title: "",
+  status: "draft",
+};
+
 const coverageStyles = {
   planned: {
     label: "Planned",
@@ -47,6 +55,12 @@ const coverageStyles = {
   },
 };
 
+const schemeStatusStyles = {
+  draft: "bg-slate-100 text-slate-700",
+  active: "bg-blue-100 text-blue-700",
+  completed: "bg-green-100 text-green-700",
+};
+
 export default function TeacherSchemeDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -54,6 +68,10 @@ export default function TeacherSchemeDetail() {
 
   const [scheme, setScheme] = useState(null);
   const [entries, setEntries] = useState([]);
+
+  const [classes, setClasses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [terms, setTerms] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,19 +81,36 @@ export default function TeacherSchemeDetail() {
   const [editingEntry, setEditingEntry] = useState(null);
   const [form, setForm] = useState(initialEntry);
 
+  const [showSchemeForm, setShowSchemeForm] = useState(false);
+  const [savingScheme, setSavingScheme] = useState(false);
+  const [schemeForm, setSchemeForm] =
+    useState(initialSchemeForm);
+
   async function loadData() {
     try {
       setLoading(true);
       setError("");
 
-      const [schemeResponse, entriesResponse] =
-        await Promise.all([
-          client.get(`/teacher/schemes/${id}`),
-          client.get(`/teacher/schemes/${id}/entries`),
-        ]);
+      const [
+        schemeResponse,
+        entriesResponse,
+        classesResponse,
+        subjectsResponse,
+        termsResponse,
+      ] = await Promise.all([
+        client.get(`/teacher/schemes/${id}`),
+        client.get(`/teacher/schemes/${id}/entries`),
+        client.get(`/teacher/classes`),
+        client.get(`/teacher/subjects`),
+        client.get(`/terms`),
+      ]);
 
       setScheme(schemeResponse.data?.data || null);
       setEntries(entriesResponse.data?.data || []);
+
+      setClasses(classesResponse.data?.classes || []);
+      setSubjects(subjectsResponse.data?.subjects || []);
+      setTerms(termsResponse.data || []);
     } catch (err) {
       console.error("Failed to load scheme:", err);
 
@@ -91,6 +126,26 @@ export default function TeacherSchemeDetail() {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  const sortedEntries = useMemo(() => {
+    return [...entries].sort((a, b) => {
+      const weekA = Number(a.week_number) || 0;
+      const weekB = Number(b.week_number) || 0;
+
+      if (weekA !== weekB) {
+        return weekA - weekB;
+      }
+
+      const dateA = a.start_date || "";
+      const dateB = b.start_date || "";
+
+      if (dateA !== dateB) {
+        return dateA.localeCompare(dateB);
+      }
+
+      return (a.id || 0) - (b.id || 0);
+    });
+  }, [entries]);
 
   const coverage = useMemo(() => {
     const total = entries.length;
@@ -119,7 +174,10 @@ export default function TeacherSchemeDetail() {
     ).length;
 
     /*
-     * Partial teaching counts as half coverage.
+     * Teaching coverage:
+     * - Planned = 0%
+     * - Partially taught = 50%
+     * - Taught = 100%
      */
     const percentage = Math.round(
       ((taught + partial * 0.5) / total) * 100
@@ -133,6 +191,111 @@ export default function TeacherSchemeDetail() {
       percentage,
     };
   }, [entries]);
+
+  const availableSubjects = useMemo(() => {
+    if (!schemeForm.grade_id) {
+      return subjects;
+    }
+
+    return subjects.filter(
+      (subject) =>
+        String(subject.grade_id) ===
+        String(schemeForm.grade_id)
+    );
+  }, [subjects, schemeForm.grade_id]);
+
+  function openEditScheme() {
+    setSchemeForm({
+      grade_id: scheme.grade_id || "",
+      subject_id: scheme.subject_id || "",
+      term_id: scheme.term_id || "",
+      title: scheme.title || "",
+      status: scheme.status || "draft",
+    });
+
+    setError("");
+    setShowSchemeForm(true);
+  }
+
+  function closeSchemeForm() {
+    if (savingScheme) return;
+
+    setShowSchemeForm(false);
+    setSchemeForm(initialSchemeForm);
+  }
+
+  function handleSchemeChange(event) {
+    const { name, value } = event.target;
+
+    setSchemeForm((current) => {
+      const updated = {
+        ...current,
+        [name]: value,
+      };
+
+      if (
+        name === "grade_id" &&
+        String(current.subject_id) &&
+        !subjects.some(
+          (subject) =>
+            String(subject.id) === String(current.subject_id) &&
+            String(subject.grade_id) === String(value)
+        )
+      ) {
+        updated.subject_id = "";
+      }
+
+      return updated;
+    });
+  }
+
+  async function handleSchemeSubmit(event) {
+    event.preventDefault();
+
+    try {
+      setSavingScheme(true);
+      setError("");
+
+      const payload = {
+        scheme_of_work: {
+          grade_id: Number(schemeForm.grade_id),
+          subject_id: Number(schemeForm.subject_id),
+          term_id: Number(schemeForm.term_id),
+          title: schemeForm.title.trim(),
+          status: schemeForm.status,
+        },
+      };
+
+      const response = await client.patch(
+        `/teacher/schemes/${id}`,
+        payload
+      );
+
+      const updatedScheme = response.data?.data;
+
+      setScheme(updatedScheme);
+
+      closeSchemeForm();
+
+      notify({
+        type: "success",
+        message: "Scheme of work updated.",
+      });
+    } catch (err) {
+      console.error("Failed to update scheme:", err);
+
+      const errors = err.response?.data?.errors;
+
+      setError(
+        Array.isArray(errors)
+          ? errors.join(", ")
+          : err.response?.data?.error ||
+              "Unable to update the scheme of work."
+      );
+    } finally {
+      setSavingScheme(false);
+    }
+  }
 
   function openCreateEntry() {
     const nextWeek =
@@ -378,31 +541,84 @@ export default function TeacherSchemeDetail() {
                 {scheme.title}
               </p>
 
-              <p className="mt-1 text-sm text-slate-500">
-                {scheme.term_name} {scheme.term_year}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p className="text-sm text-slate-500">
+                  {scheme.term_name} {scheme.term_year}
+                </p>
+
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    schemeStatusStyles[scheme.status] ||
+                    schemeStatusStyles.draft
+                  }`}
+                >
+                  {scheme.status
+                    ? scheme.status.charAt(0).toUpperCase() +
+                      scheme.status.slice(1)
+                    : "Draft"}
+                </span>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateEntry}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              <Plus size={18} />
-              Add Week
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={openEditScheme}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <Pencil size={17} />
+                Edit Scheme
+              </button>
+
+              <button
+                type="button"
+                onClick={openCreateEntry}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                <Plus size={18} />
+                Add Week
+              </button>
+            </div>
           </div>
 
-          {/* Coverage */}
+          {/* Summary */}
+          <div className="mt-6 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+            <SummaryCard
+              label="Weeks Planned"
+              value={coverage.total}
+              description="Weekly entries"
+            />
+
+            <SummaryCard
+              label="Taught"
+              value={coverage.taught}
+              description="Completed weeks"
+            />
+
+            <SummaryCard
+              label="Partially Taught"
+              value={coverage.partial}
+              description="In progress"
+            />
+
+            <SummaryCard
+              label="Teaching Coverage"
+              value={`${coverage.percentage}%`}
+              description="Based on teaching status"
+            />
+          </div>
+
+          {/* Teaching Coverage */}
           <div className="mt-6 border-t border-slate-100 pt-5">
             <div className="mb-2 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-800">
-                  Syllabus Coverage
+                  Teaching Coverage
                 </p>
 
                 <p className="text-xs text-slate-500">
-                  Based on the teaching status of weekly entries.
+                  Based on the teaching status of planned
+                  weekly entries.
                 </p>
               </div>
 
@@ -421,13 +637,6 @@ export default function TeacherSchemeDetail() {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500">
-              <span>
-                Total:{" "}
-                <strong className="text-slate-700">
-                  {coverage.total}
-                </strong>
-              </span>
-
               <span>
                 Planned:{" "}
                 <strong className="text-slate-700">
@@ -453,14 +662,14 @@ export default function TeacherSchemeDetail() {
         </div>
       </div>
 
-      {error && (
+      {error && !showForm && !showSchemeForm && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {/* Weekly entries */}
-      {entries.length === 0 ? (
+      {sortedEntries.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
           <CalendarDays
             className="mx-auto mb-3 text-slate-400"
@@ -487,7 +696,7 @@ export default function TeacherSchemeDetail() {
         </div>
       ) : (
         <div className="space-y-4">
-          {entries.map((entry) => {
+          {sortedEntries.map((entry) => {
             const status =
               coverageStyles[
                 entry.coverage_status
@@ -594,6 +803,162 @@ export default function TeacherSchemeDetail() {
               </article>
             );
           })}
+        </div>
+      )}
+
+      {/* Scheme edit modal */}
+      {showSchemeForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Edit Scheme of Work
+                </h2>
+
+                <p className="text-sm text-slate-500">
+                  Update the scheme details.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeSchemeForm}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleSchemeSubmit}
+              className="space-y-5 p-5"
+            >
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SelectField
+                  label="Class / Grade"
+                  name="grade_id"
+                  value={schemeForm.grade_id}
+                  onChange={handleSchemeChange}
+                  required
+                >
+                  <option value="">
+                    Select class / grade
+                  </option>
+
+                  {classes.map((item) => (
+                    <option
+                      key={item.id}
+                      value={item.id}
+                    >
+                      {item.name ||
+                        item.grade_name ||
+                        `Grade ${item.id}`}
+                    </option>
+                  ))}
+                </SelectField>
+
+                <SelectField
+                  label="Subject"
+                  name="subject_id"
+                  value={schemeForm.subject_id}
+                  onChange={handleSchemeChange}
+                  required
+                >
+                  <option value="">
+                    Select subject
+                  </option>
+
+                  {availableSubjects.map((subject) => (
+                    <option
+                      key={subject.id}
+                      value={subject.id}
+                    >
+                      {subject.name}
+                    </option>
+                  ))}
+                </SelectField>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SelectField
+                  label="Term"
+                  name="term_id"
+                  value={schemeForm.term_id}
+                  onChange={handleSchemeChange}
+                  required
+                >
+                  <option value="">
+                    Select term
+                  </option>
+
+                  {terms.map((term) => (
+                    <option
+                      key={term.id}
+                      value={term.id}
+                    >
+                      {term.name} {term.year}
+                    </option>
+                  ))}
+                </SelectField>
+
+                <SelectField
+                  label="Status"
+                  name="status"
+                  value={schemeForm.status}
+                  onChange={handleSchemeChange}
+                  required
+                >
+                  <option value="draft">
+                    Draft
+                  </option>
+
+                  <option value="active">
+                    Active
+                  </option>
+
+                  <option value="completed">
+                    Completed
+                  </option>
+                </SelectField>
+              </div>
+
+              <Field
+                label="Scheme Title"
+                name="title"
+                value={schemeForm.title}
+                onChange={handleSchemeChange}
+                required
+              />
+
+              <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
+                <button
+                  type="button"
+                  onClick={closeSchemeForm}
+                  disabled={savingScheme}
+                  className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={savingScheme}
+                  className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {savingScheme
+                    ? "Saving..."
+                    : "Save Scheme"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -723,9 +1088,11 @@ export default function TeacherSchemeDetail() {
                     <option value="planned">
                       Planned
                     </option>
+
                     <option value="partially_taught">
                       Partially Taught
                     </option>
+
                     <option value="taught">
                       Taught
                     </option>
@@ -770,6 +1137,28 @@ export default function TeacherSchemeDetail() {
   );
 }
 
+function SummaryCard({
+  label,
+  value,
+  description,
+}) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+
+      <p className="mt-1 text-2xl font-bold text-slate-900">
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs text-slate-500">
+        {description}
+      </p>
+    </div>
+  );
+}
+
 function InfoBlock({ title, value }) {
   return (
     <div>
@@ -808,6 +1197,33 @@ function Field({
         min={min}
         className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500"
       />
+    </label>
+  );
+}
+
+function SelectField({
+  label,
+  name,
+  value,
+  onChange,
+  required = false,
+  children,
+}) {
+  return (
+    <label className="space-y-1.5">
+      <span className="text-sm font-medium text-slate-700">
+        {label}
+      </span>
+
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-slate-500"
+      >
+        {children}
+      </select>
     </label>
   );
 }
