@@ -61,6 +61,8 @@ import TeacherPlanningCalendar from "./pages/teacher/TeacherPlanningCalendar";
 import TeacherTimetable from "./pages/teacher/TeacherTimetable";
 import AdminTimetable from "./pages/AdminTimetable";
 import AdminTimetableEditor from "./pages/AdminTimetableEditor";
+import Notifications from "./pages/Notifications";
+import Announcements from "./pages/Announcements";
 
 function Home() {
   const {
@@ -300,6 +302,16 @@ export default function App() {
             <Route
               path="/timetable/:id"
               element={admin(<AdminTimetableEditor />)}
+            />
+
+            <Route
+              path="/announcements"
+              element={admin(<Announcements />)}
+            />
+
+            <Route
+              path="/notifications"
+              element={anyUser(<Notifications />)}
             />
 
             <Route

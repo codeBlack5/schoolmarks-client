@@ -1,5 +1,3 @@
-// src/components/Sidebar.jsx
-
 import {
   NavLink,
   useLocation,
@@ -19,9 +17,13 @@ import {
   FileText,
   Bell,
   UserCircle,
+  Megaphone,
 } from "lucide-react";
 
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import client from "../api/client";
+import { playNotificationSound } from "../utils/notificationSound";
 
 const linkClass = ({ isActive }) =>
   `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -91,10 +93,10 @@ const teacherNavItems = [
     path: "/teacher/calendar",
     icon: CalendarDays,
   },
-  { 
-    label: "Timetable", 
-    path: "/teacher/timetable", 
-    icon: CalendarDays
+  {
+    label: "Timetable",
+    path: "/teacher/timetable",
+    icon: CalendarDays,
   },
   {
     label: "Schemes of Work",
@@ -122,11 +124,6 @@ const teacherNavItems = [
     icon: FileText,
   },
   {
-    label: "Notifications",
-    path: "/teacher/notifications",
-    icon: Bell,
-  },
-  {
     label: "My Profile",
     path: "/teacher/profile",
     icon: UserCircle,
@@ -145,53 +142,165 @@ export default function Sidebar({ open, onClose }) {
 
   const location = useLocation();
 
+  const [unreadNotifications, setUnreadNotifications] =
+    useState(0);
+  const previousUnreadNotifications = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadUnreadNotifications = async (playSound = true) => {
+      try {
+        const response = await client.get("/notifications/unread_count");
+
+        if (!mounted) {
+          return;
+        }
+
+        const nextCount = response.data?.unread_count || 0;
+        const previousCount = previousUnreadNotifications.current;
+
+        setUnreadNotifications(nextCount);
+
+        // Do not play sound on the initial load.
+        if (
+          playSound &&
+          previousCount !== null &&
+          nextCount > previousCount
+        ) {
+          playNotificationSound();
+        }
+
+        previousUnreadNotifications.current = nextCount;
+      } catch (error) {
+        console.error(
+          "Failed to load notification count:",
+          error
+        );
+      }
+    };
+
+    // Initial load — silent.
+    loadUnreadNotifications(false);
+
+    const handleNotificationsUpdated = () => {
+      loadUnreadNotifications(false);
+    };
+
+    window.addEventListener(
+      "schoolmarks:notifications-updated",
+      handleNotificationsUpdated
+    );
+
+    // Check for new notifications every 15 seconds.
+    const interval = window.setInterval(() => {
+      loadUnreadNotifications(true);
+    }, 15000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+
+      window.removeEventListener(
+        "schoolmarks:notifications-updated",
+        handleNotificationsUpdated
+      );
+    };
+  }, [user?.id, school?.id]);
   /*
-   * Show platform-level links if user is a System Admin
-   * not actively inspecting a specific school.
+   * Platform-level navigation
+   *
+   * A system admin without an active tenant sees the
+   * platform administration navigation.
    */
-  const isPlatformView = isSystemAdmin && !activeTenant;
+  const isPlatformView =
+    isSystemAdmin && !activeTenant;
 
   /*
    * Teacher Workspace users:
    * teacher, headteacher, deputy and DOS.
    */
-  const isTeacherWorkspaceUser = TEACHER_WORKSPACE_ROLES.includes(
-    user?.role
-  );
+  const isTeacherWorkspaceUser =
+    TEACHER_WORKSPACE_ROLES.includes(user?.role);
 
   /*
-   * We determine the workspace from the URL rather than
-   * the role alone. This is important for headteachers,
-   * deputies and DOS users because they can move between
-   * the admin dashboard and Teacher Workspace.
+   * Determine workspace from the URL.
+   *
+   * This allows headteachers, deputies and DOS users to
+   * move between the normal admin area and Teacher Workspace.
    */
   const isTeacherWorkspace =
     isTeacherWorkspaceUser &&
     location.pathname.startsWith("/teacher");
 
   /*
-   * Display role label appropriately.
+   * Display role label.
    */
   const roleDisplay = isPlatformView
     ? "Platform Admin"
     : ROLE_LABELS[user?.role] || user?.role;
 
   /*
-   * Determine logo URL if available.
+   * School logo.
    */
-  const schoolLogo = school?.logo_url || school?.logo;
+  const schoolLogo =
+    school?.logo_url || school?.logo;
+
+  /*
+   * Teacher notification navigation item.
+   *
+   * Notifications are available to every authenticated
+   * user, including teachers.
+   */
+  const teacherNotificationsItem = (
+    <NavLink
+      to="/notifications"
+      onClick={onClose}
+      className={({ isActive }) => `
+        flex items-center justify-between gap-3
+        rounded-md px-3 py-2.5
+        text-sm font-medium
+        transition-colors
+        ${
+          isActive
+            ? "bg-blue-50 text-blue-700 font-semibold"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+        }
+      `}
+    >
+      <span className="flex items-center gap-3">
+        <Bell size={18} />
+
+        <span>Notifications</span>
+      </span>
+
+      {unreadNotifications > 0 && (
+        <span className="min-w-[22px] rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[11px] font-bold text-white">
+          {unreadNotifications > 99
+            ? "99+"
+            : unreadNotifications}
+        </span>
+      )}
+    </NavLink>
+  );
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 p-4 flex flex-col
+      className={`
+        fixed inset-y-0 left-0 z-40 w-64
+        bg-white border-r border-slate-200
+        p-4 flex flex-col
         transform transition-transform duration-200 ease-in-out
         md:static md:z-auto md:w-56 md:translate-x-0
-        ${open ? "translate-x-0" : "-translate-x-full"}`}
+        ${open ? "translate-x-0" : "-translate-x-full"}
+      `}
     >
-      {/* Header */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
       <div className="mb-6 flex items-start justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          {/* School Logo or Fallback Avatar */}
           {schoolLogo ? (
             <img
               src={schoolLogo}
@@ -202,7 +311,8 @@ export default function Sidebar({ open, onClose }) {
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
               style={{
-                backgroundColor: "var(--color-navy, #0f172a)",
+                backgroundColor:
+                  "var(--color-navy, #0f172a)",
               }}
             >
               {school?.name?.[0]?.toUpperCase() ||
@@ -213,7 +323,9 @@ export default function Sidebar({ open, onClose }) {
           <div className="min-w-0">
             <h1
               className="text-sm font-semibold leading-tight"
-              style={{ color: "var(--color-navy)" }}
+              style={{
+                color: "var(--color-navy)",
+              }}
             >
               Steelo Analytics
             </h1>
@@ -236,18 +348,24 @@ export default function Sidebar({ open, onClose }) {
         </button>
       </div>
 
-      {/* User Info */}
+      {/* =====================================================
+          USER INFO
+      ===================================================== */}
+
       <p className="text-xs text-slate-400 mb-4 truncate">
         {user?.name} · {roleDisplay}
       </p>
 
-      {/* Navigation */}
+      {/* =====================================================
+          MAIN NAVIGATION
+      ===================================================== */}
+
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {isPlatformView ? (
           /*
-           * =====================================================
+           * ===================================================
            * SYSTEM ADMIN PLATFORM NAVIGATION
-           * =====================================================
+           * ===================================================
            */
           <>
             <div className="pt-1 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
@@ -272,9 +390,9 @@ export default function Sidebar({ open, onClose }) {
           </>
         ) : isTeacherWorkspace ? (
           /*
-           * =====================================================
+           * ===================================================
            * TEACHER WORKSPACE NAVIGATION
-           * =====================================================
+           * ===================================================
            */
           <>
             <div className="pt-1 pb-2 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
@@ -286,18 +404,26 @@ export default function Sidebar({ open, onClose }) {
 
               const active =
                 location.pathname === item.path ||
-                location.pathname.startsWith(`${item.path}/`);
+                location.pathname.startsWith(
+                  `${item.path}/`
+                );
 
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   onClick={onClose}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-blue-50 text-blue-700 font-semibold"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                  className={`
+                    flex items-center gap-3
+                    rounded-md px-3 py-2.5
+                    text-sm font-medium
+                    transition-colors
+                    ${
+                      active
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }
+                  `}
                 >
                   <Icon
                     size={18}
@@ -308,25 +434,39 @@ export default function Sidebar({ open, onClose }) {
                 </NavLink>
               );
             })}
+
+            {/* Notifications are available to all teachers */}
+            {teacherNotificationsItem}
           </>
         ) : (
           /*
-           * =====================================================
+           * ===================================================
            * EXISTING SCHOOL / ADMIN NAVIGATION
-           * =====================================================
+           * ===================================================
            */
           <>
-            {/* Quick return button when System Admin is inspecting a tenant */}
+            {/* -----------------------------------------------
+                System Admin tenant return
+            ------------------------------------------------ */}
             {isSystemAdmin && activeTenant && (
               <NavLink
                 to="/admin/schools"
-                className="block px-3 py-2 mb-2 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
+                className="
+                  block px-3 py-2 mb-2
+                  rounded-md text-xs font-semibold
+                  bg-amber-50 text-amber-800
+                  border border-amber-200
+                  hover:bg-amber-100
+                "
                 onClick={onClose}
               >
                 ← Back to Schools Directory
               </NavLink>
             )}
 
+            {/* -----------------------------------------------
+                Main navigation
+            ------------------------------------------------ */}
             {isAdmin && (
               <NavLink
                 to="/dashboard"
@@ -385,9 +525,79 @@ export default function Sidebar({ open, onClose }) {
               </NavLink>
             )}
 
+            {/* -----------------------------------------------
+                COMMUNICATION
+            ------------------------------------------------ */}
             {isAdmin && (
               <>
-                <div className="pt-3 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                <div className="pt-4 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                  Communication
+                </div>
+
+                <NavLink
+                  to="/announcements"
+                  className={({ isActive }) =>
+                    `
+                      flex items-center gap-3
+                      px-3 py-2.5
+                      rounded-md
+                      text-sm font-medium
+                      transition-colors
+                      ${
+                        isActive
+                          ? "bg-blue-50 text-blue-700 font-semibold"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }
+                    `
+                  }
+                  onClick={onClose}
+                >
+                  <Megaphone size={18} />
+
+                  <span>Announcements</span>
+                </NavLink>
+
+                <NavLink
+                  to="/notifications"
+                  className={({ isActive }) =>
+                    `
+                      flex items-center justify-between gap-3
+                      px-3 py-2.5
+                      rounded-md
+                      text-sm font-medium
+                      transition-colors
+                      ${
+                        isActive
+                          ? "bg-blue-50 text-blue-700 font-semibold"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }
+                    `
+                  }
+                  onClick={onClose}
+                >
+                  <span className="flex items-center gap-3">
+                    <Bell size={18} />
+
+                    <span>Notifications</span>
+                  </span>
+
+                  {unreadNotifications > 0 && (
+                    <span className="min-w-[22px] rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[11px] font-bold text-white">
+                      {unreadNotifications > 99
+                        ? "99+"
+                        : unreadNotifications}
+                    </span>
+                  )}
+                </NavLink>
+              </>
+            )}
+
+            {/* -----------------------------------------------
+                SETUP
+            ------------------------------------------------ */}
+            {isAdmin && (
+              <>
+                <div className="pt-4 pb-1 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
                   Setup
                 </div>
 
@@ -402,9 +612,12 @@ export default function Sidebar({ open, onClose }) {
                 <NavLink
                   to="/timetable"
                   className={linkClass}
+                  onClick={onClose}
                 >
-                  <CalendarDays className="h-4 w-4" />
-                  <span>Timetable</span>
+                  <span className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    <span>Timetable</span>
+                  </span>
                 </NavLink>
 
                 <NavLink
@@ -460,8 +673,12 @@ export default function Sidebar({ open, onClose }) {
         )}
       </nav>
 
-      {/* Footer Navigation */}
+      {/* =====================================================
+          FOOTER NAVIGATION
+      ===================================================== */}
+
       <div className="space-y-1 pt-2 border-t border-slate-100">
+        {/* Profile */}
         {isTeacherWorkspace ? (
           <NavLink
             to="/teacher/profile"
@@ -480,9 +697,15 @@ export default function Sidebar({ open, onClose }) {
           </NavLink>
         )}
 
+        {/* Logout */}
         <button
           onClick={logout}
-          className="w-full text-sm text-left px-3 py-2 rounded-md text-slate-500 hover:bg-slate-50"
+          className="
+            w-full text-sm text-left
+            px-3 py-2 rounded-md
+            text-slate-500
+            hover:bg-slate-50
+          "
         >
           Log out
         </button>
