@@ -14,6 +14,7 @@ export default function AssessmentBatchForm() {
     assessment_type: "opener",
     name: "",
     date_administered: "",
+    due_date: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -65,6 +66,7 @@ export default function AssessmentBatchForm() {
         assessment_type: form.assessment_type,
         name: form.name.trim(),
         date_administered: form.date_administered || null,
+        due_date: form.due_date || null,
       });
 
       setResult(response.data);
@@ -217,6 +219,26 @@ export default function AssessmentBatchForm() {
             onChange={handleChange}
             className="w-full rounded-lg border px-3 py-2"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Due Date
+          </label>
+
+          <input
+            type="date"
+            name="due_date"
+            value={form.due_date}
+            onChange={handleChange}
+            min={form.date_administered || undefined}
+            className="w-full rounded-lg border px-3 py-2"
+          />
+
+          <p className="mt-1 text-xs text-gray-500">
+            Teachers will receive assessment due notifications based on this
+            date.
+          </p>
         </div>
 
         <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
