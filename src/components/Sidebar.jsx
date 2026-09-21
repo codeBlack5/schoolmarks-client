@@ -434,9 +434,6 @@ export default function Sidebar({ open, onClose }) {
                 </NavLink>
               );
             })}
-
-            {/* Notifications are available to all teachers */}
-            {teacherNotificationsItem}
           </>
         ) : (
           /*
@@ -697,6 +694,9 @@ export default function Sidebar({ open, onClose }) {
           </NavLink>
         )}
 
+        {/* Notifications are available to all teachers */}
+        {teacherNotificationsItem}
+        
         {/* Logout */}
         <button
           onClick={logout}
