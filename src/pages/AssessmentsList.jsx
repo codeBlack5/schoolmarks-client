@@ -210,7 +210,7 @@ export default function AssessmentsList() {
     );
   }
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+    <div className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
       <AssessmentToolbar
         search={search}
         setSearch={setSearch}
@@ -220,13 +220,13 @@ export default function AssessmentsList() {
       />
       <AssessmentStats stats={stats} />
       {error && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm leading-5 text-red-700">
           {error}
         </div>
       )}
 
       {assessments.length === 0 && (
-        <div className="rounded-lg border border-slate-200 bg-white py-10 text-center text-slate-500">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-sm">
           No assessments match your search.
         </div>
       )}
@@ -248,9 +248,9 @@ export default function AssessmentsList() {
         />
       ))}
       {pagination && pagination.total_pages > 1 && (
-      <div className="mt-8 flex flex-col items-center gap-4">
+      <div className="mt-6 flex flex-col items-center gap-3 sm:mt-8 sm:gap-4">
 
-        <div className="text-sm text-slate-600">
+        <div className="text-center text-xs text-slate-600 sm:text-sm">
           Showing page{" "}
           <strong>{pagination.current_page}</strong>
           {" "}of{" "}
@@ -261,12 +261,12 @@ export default function AssessmentsList() {
           {pagination.total_count} assessments
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
 
           <button
             disabled={!pagination.prev_page}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ← Previous
           </button>
@@ -286,7 +286,7 @@ export default function AssessmentsList() {
               <button
                 key={number}
                 onClick={() => setPage(number)}
-                className={`h-10 w-10 rounded border transition ${
+                className={`h-10 w-10 rounded-lg border transition ${
                   number === pagination.current_page
                     ? "bg-blue-600 text-white"
                     : "bg-white hover:bg-slate-100"
@@ -299,7 +299,7 @@ export default function AssessmentsList() {
           <button
             disabled={!pagination.next_page}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next →
           </button>
