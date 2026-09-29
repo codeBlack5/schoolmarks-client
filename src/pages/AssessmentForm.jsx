@@ -84,14 +84,24 @@ export default function AssessmentForm() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-          style={{ backgroundColor: "var(--color-navy)" }}
-        >
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            style={{ backgroundColor: "var(--color-navy)" }}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/marks/${id}`)}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Enter Marks
+          </button>
+        </div>
       </form>
     </div>
   );
