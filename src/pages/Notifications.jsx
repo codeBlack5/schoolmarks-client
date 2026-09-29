@@ -169,7 +169,7 @@ export default function Notifications() {
                 </h1>
 
                 <p className="text-sm text-slate-500">
-                  Stay up to date with your SchoolMarks workspace.
+                  Stay up to date with your Steelo Analytics workspace.
                 </p>
               </div>
             </div>
@@ -239,7 +239,7 @@ export default function Notifications() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              New SchoolMarks notifications will appear here.
+              New Steelo Analytics notifications will appear here.
             </p>
           </div>
         )}
