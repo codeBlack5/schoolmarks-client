@@ -153,23 +153,23 @@ export default function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-4xl">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white">
-                <Bell size={21} />
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white sm:h-11 sm:w-11">
+                <Bell size={20} />
               </div>
 
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
                   Notifications
                 </h1>
 
-                <p className="text-sm text-slate-500">
-                  Stay up to date with your SchoolMarks workspace.
+                <p className="mt-0.5 text-xs leading-5 text-slate-500 sm:text-sm">
+                  Stay up to date with your Steelo Analytics workspace.
                 </p>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function Notifications() {
               type="button"
               onClick={markAllAsRead}
               disabled={markingAll}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               <CheckCheck size={17} />
 
@@ -190,8 +190,8 @@ export default function Notifications() {
         </div>
 
         {/* Summary */}
-        <div className="mb-5 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:mb-5">
+          <div className="flex min-h-6 items-center justify-between gap-3">
             <span className="text-sm text-slate-500">
               {notifications.length}{" "}
               {notifications.length === 1
@@ -218,7 +218,7 @@ export default function Notifications() {
 
         {/* Loading */}
         {loading && (
-          <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center shadow-sm">
             <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-slate-700" />
 
             <p className="text-sm text-slate-500">
@@ -229,7 +229,7 @@ export default function Notifications() {
 
         {/* Empty */}
         {!loading && notifications.length === 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white px-5 py-10 text-center shadow-sm sm:p-12">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
               <Check size={25} className="text-slate-500" />
             </div>
@@ -239,7 +239,7 @@ export default function Notifications() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              New SchoolMarks notifications will appear here.
+              New Steelo Analytics notifications will appear here.
             </p>
           </div>
         )}
@@ -263,9 +263,9 @@ export default function Notifications() {
                       : "border-blue-200 bg-blue-50/30"
                   }`}
                 >
-                  <div className="flex gap-4 p-4 sm:p-5">
+                  <div className="flex gap-3 p-4 sm:gap-4 sm:p-5">
                     <div
-                      className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 ${
                         notification.read
                           ? "bg-slate-100 text-slate-500"
                           : "bg-blue-100 text-blue-700"
@@ -275,10 +275,10 @@ export default function Notifications() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="font-semibold text-slate-900">
+                            <h2 className="min-w-0 break-words font-semibold leading-5 text-slate-900">
                               {notification.title}
                             </h2>
 
@@ -294,21 +294,21 @@ export default function Notifications() {
                           </p>
                         </div>
 
-                        <span className="shrink-0 text-xs text-slate-400">
+                        <span className="text-xs leading-5 text-slate-400 sm:shrink-0">
                           {formatDate(notification.created_at)}
                         </span>
                       </div>
 
-                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                      <p className="mt-3 break-words text-sm leading-6 text-slate-600">
                         {notification.message}
                       </p>
 
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         {notification.action_url && (
                           <button
                             type="button"
                             onClick={() => openNotification(notification)}
-                            className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+                            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 sm:w-auto"
                           >
                             Open
                             <ExternalLink size={14} />
@@ -319,7 +319,7 @@ export default function Notifications() {
                           <button
                             type="button"
                             onClick={() => markAsRead(notification)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:w-auto"
                           >
                             <Check size={14} />
                             Mark as read

@@ -23,17 +23,17 @@ export default function AssessmentStats({ stats }) {
   ];
 
   return (
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-5 grid grid-cols-2 gap-3 sm:mb-6 sm:gap-4 lg:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.title}
-          className={`rounded-lg border p-4 shadow-sm ${card.color}`}
+          className={`rounded-xl border p-3 shadow-sm sm:p-4 ${card.color}`}
         >
-          <div className="text-sm font-medium opacity-80">
+          <div className="text-xs font-medium opacity-80 sm:text-sm">
             {card.title}
           </div>
 
-          <div className="mt-2 text-3xl font-bold">
+          <div className="mt-1 text-2xl font-bold sm:mt-2 sm:text-3xl">
             {card.value}
           </div>
         </div>
