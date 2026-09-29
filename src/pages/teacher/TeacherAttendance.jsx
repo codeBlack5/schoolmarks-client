@@ -269,14 +269,14 @@ export default function TeacherAttendance() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="w-full min-w-0 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <div className="mx-auto w-full min-w-0 max-w-6xl">
 
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3">
+        <div className="mb-5 sm:mb-6">
+          <div className="flex min-w-0 items-start gap-3">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11"
               style={{
                 backgroundColor:
                   "color-mix(in srgb, var(--color-navy) 10%, white)",
@@ -290,13 +290,13 @@ export default function TeacherAttendance() {
 
             <div>
               <h1
-                className="text-xl sm:text-2xl font-semibold"
+                className="break-words text-xl font-semibold sm:text-2xl"
                 style={{ color: "var(--color-navy)" }}
               >
                 Attendance
               </h1>
 
-              <p className="text-sm text-slate-500">
+              <p className="mt-0.5 max-w-2xl text-sm leading-5 text-slate-500">
                 Record and manage daily attendance for your classes
               </p>
             </div>
@@ -326,7 +326,7 @@ export default function TeacherAttendance() {
 
         {/* Controls */}
         <section className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
 
             {/* Class */}
             <div>
@@ -347,7 +347,7 @@ export default function TeacherAttendance() {
                   disabled={
                     loadingGrades || grades.length === 0
                   }
-                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
+                  className="min-h-11 w-full appearance-none rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 sm:text-sm"
                 >
                   {loadingGrades ? (
                     <option>Loading classes...</option>
@@ -387,14 +387,14 @@ export default function TeacherAttendance() {
                   onChange={(event) =>
                     setSelectedDate(event.target.value)
                   }
-                  className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="min-h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:text-sm"
                 />
               </div>
             </div>
           </div>
 
           {grade && (
-            <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4 text-sm text-slate-500 sm:gap-3">
               <div className="flex items-center gap-2">
                 <GraduationCap className="w-4 h-4" />
                 <span className="font-medium text-slate-700">
@@ -421,7 +421,7 @@ export default function TeacherAttendance() {
 
         {/* Summary */}
         {!loadingAttendance && students.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
+          <div className="mb-5 grid grid-cols-2 gap-2.5 sm:gap-3 lg:mb-6 lg:grid-cols-6">
             <SummaryCard
               label="Total"
               value={summary.total}
@@ -497,7 +497,7 @@ export default function TeacherAttendance() {
 
             {/* Roster header */}
             <div className="px-4 sm:px-5 py-4 border-b border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
 
                 <div>
                   <h2 className="font-semibold text-slate-800">
@@ -513,7 +513,7 @@ export default function TeacherAttendance() {
                   <button
                     type="button"
                     onClick={() => markAll("present")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 hover:bg-green-100"
+                    className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 transition hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-200 sm:w-auto"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     All Present
@@ -522,7 +522,7 @@ export default function TeacherAttendance() {
                   <button
                     type="button"
                     onClick={() => markAll("absent")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+                    className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-200 sm:w-auto"
                   >
                     <X className="w-3.5 h-3.5" />
                     All Absent
@@ -561,7 +561,7 @@ export default function TeacherAttendance() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 items-start gap-3">
                           <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                             <Users className="w-4 h-4 text-slate-500" />
                           </div>
@@ -598,18 +598,18 @@ export default function TeacherAttendance() {
                   key={student.id}
                   className="p-4"
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="text-xs text-slate-400 pt-2 w-5">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="w-5 shrink-0 pt-2 text-xs text-slate-400">
                       {index + 1}
                     </span>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="mb-3 flex min-w-0 items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                           <Users className="w-3.5 h-3.5 text-slate-500" />
                         </div>
 
-                        <p className="text-sm font-medium text-slate-800 truncate">
+                        <p className="min-w-0 truncate text-sm font-medium text-slate-800">
                           {student.name}
                         </p>
                       </div>
@@ -632,9 +632,9 @@ export default function TeacherAttendance() {
 
             {/* Save footer */}
             <div className="border-t border-slate-200 bg-slate-50 px-4 sm:px-5 py-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
 
-                <div className="text-xs text-slate-500">
+                <div className="text-xs leading-5 text-slate-500">
                 <span className="font-medium text-slate-700">
                   {summary.total - summary.unmarked}
                 </span>{" "}
@@ -652,7 +652,7 @@ export default function TeacherAttendance() {
                   type="button"
                   onClick={handleSaveAttendance}
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:opacity-50 sm:w-auto"
                   style={{
                     backgroundColor: "var(--color-navy)",
                   }}
@@ -670,10 +670,10 @@ export default function TeacherAttendance() {
 
         {/* Helpful navigation */}
         {grade && (
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
             <Link
               to={`/teacher/classes/${grade.id}`}
-              className="inline-flex items-center gap-2 text-sm font-medium"
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-200 sm:px-0"
               style={{ color: "var(--color-navy)" }}
             >
               <GraduationCap className="w-4 h-4" />
@@ -682,7 +682,7 @@ export default function TeacherAttendance() {
 
             <Link
               to="/teacher/classes"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700"
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:px-0"
             >
               <BookOpen className="w-4 h-4" />
               My Classes
