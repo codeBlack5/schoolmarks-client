@@ -140,13 +140,13 @@ function AdminTimetable() {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="w-full min-w-0 space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <CalendarDays className="h-6 w-6 text-slate-700" />
 
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
                 School Timetable
               </h1>
             </div>
@@ -159,7 +159,7 @@ function AdminTimetable() {
           <button
             type="button"
             onClick={openCreateForm}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             Create Timetable
@@ -199,7 +199,7 @@ function AdminTimetable() {
             {timetables.map((timetable) => (
               <div
                 key={timetable.id}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
@@ -219,7 +219,7 @@ function AdminTimetable() {
                   </span>
                 </div>
 
-                <h2 className="mt-4 font-semibold text-slate-900">
+                <h2 className="mt-4 break-words font-semibold text-slate-900">
                   {timetable.name}
                 </h2>
 
@@ -228,7 +228,7 @@ function AdminTimetable() {
                   {timetable.term?.year}
                 </p>
 
-                <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+                <div className="mt-4 flex min-w-0 items-start gap-2 text-sm text-slate-500">
                   <Clock3 className="h-4 w-4" />
                   <span>
                     {timetable.entries_count || 0} scheduled lessons
@@ -238,7 +238,7 @@ function AdminTimetable() {
                 <button
                   type="button"
                   onClick={() => navigate(`/timetable/${timetable.id}`)}
-                  className="mt-5 flex w-full items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="mt-5 flex min-h-11 w-full items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 >
                   <span>Open Timetable</span>
                   <ChevronRight className="h-4 w-4" />
@@ -250,9 +250,9 @@ function AdminTimetable() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 p-3 sm:p-4">
+          <div className="my-auto w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-6">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
                   Create School Timetable
@@ -267,7 +267,7 @@ function AdminTimetable() {
                 type="button"
                 onClick={closeForm}
                 disabled={saving}
-                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+                className="min-h-10 min-w-10 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:opacity-50"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -276,7 +276,7 @@ function AdminTimetable() {
 
             <form
               onSubmit={handleSubmit}
-              className="space-y-5 p-6"
+              className="space-y-5 p-4 sm:p-6"
             >
               {formError && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -294,7 +294,7 @@ function AdminTimetable() {
                   value={form.term_id}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                  className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 sm:text-sm"
                 >
                   <option value="">Select term</option>
 
@@ -318,7 +318,7 @@ function AdminTimetable() {
                   onChange={handleChange}
                   required
                   placeholder="e.g. 2026 Term 2 Main School Timetable"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                  className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 sm:text-sm"
                 />
               </div>
 
@@ -331,7 +331,7 @@ function AdminTimetable() {
                   name="status"
                   value={form.status}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                  className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 sm:text-sm"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -343,7 +343,7 @@ function AdminTimetable() {
                   type="button"
                   onClick={closeForm}
                   disabled={saving}
-                  className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="min-h-11 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -351,7 +351,7 @@ function AdminTimetable() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Save className="h-4 w-4" />
                   {saving ? "Creating..." : "Create Timetable"}
