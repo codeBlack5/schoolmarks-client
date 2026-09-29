@@ -60,7 +60,7 @@ export default function PerformanceDistribution({
   return (
     <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-slate-100">
+      <div className="p-4 sm:p-5 border-b border-slate-100 min-w-0">
         <h2
           className="text-base font-semibold"
           style={{ color: "var(--color-navy)" }}
@@ -96,7 +96,7 @@ export default function PerformanceDistribution({
       </div>
 
       {/* Distribution */}
-      <div className="p-5">
+      <div className="p-4 sm:p-5 min-w-0">
         <div className="mb-4">
           <h3 className="text-sm font-semibold text-slate-700">
             Results by performance level
@@ -131,7 +131,7 @@ export default function PerformanceDistribution({
                         {category.key}
                       </span>
 
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-slate-700 break-words">
                         {category.label}
                       </span>
                     </div>
@@ -170,7 +170,7 @@ export default function PerformanceDistribution({
       </div>
 
       {/* Target comparison */}
-      <div className="px-5 pb-5">
+      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -210,7 +210,7 @@ export default function PerformanceDistribution({
       </div>
 
       {/* Insight */}
-      <div className="px-5 py-4 bg-slate-50 border-t border-slate-100">
+      <div className="px-4 py-4 sm:px-5 bg-slate-50 border-t border-slate-100">
         <p className="text-xs text-slate-500">
           <span className="font-semibold text-slate-600">
             Performance insight:
