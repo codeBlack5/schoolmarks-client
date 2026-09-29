@@ -329,8 +329,8 @@ export default function MarkEntryGrid() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="mx-auto w-full min-w-0 max-w-3xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p
             className="text-sm font-medium uppercase tracking-wide"
@@ -346,7 +346,7 @@ export default function MarkEntryGrid() {
           </p>
 
           <h1
-            className="text-lg font-semibold"
+            className="break-words text-lg font-semibold leading-6 sm:text-xl"
             style={{
               color: "var(--color-navy)",
             }}
@@ -366,7 +366,7 @@ export default function MarkEntryGrid() {
         <button
           type="button"
           onClick={openAssessmentEdit}
-          className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium transition hover:bg-slate-50"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 sm:w-auto"
           style={{
             borderColor:
               "var(--color-navy)",
@@ -380,7 +380,7 @@ export default function MarkEntryGrid() {
       {editingAssessment && (
         <form
           onSubmit={handleAssessmentUpdate}
-          className="mb-4 mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4"
+          className="mb-4 mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4"
         >
           <div className="mb-3">
             <h2
@@ -421,7 +421,7 @@ export default function MarkEntryGrid() {
                     })
                   )
                 }
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500"
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 sm:text-sm"
               />
             </div>
 
@@ -445,7 +445,7 @@ export default function MarkEntryGrid() {
                     })
                   )
                 }
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500"
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 sm:text-sm"
               />
             </div>
           </div>
@@ -478,7 +478,7 @@ export default function MarkEntryGrid() {
                 setAssessmentError("");
               }}
               disabled={assessmentSaving}
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50 sm:w-auto"
             >
               Cancel
             </button>
@@ -486,7 +486,7 @@ export default function MarkEntryGrid() {
         </form>
       )}
 
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm leading-5 text-slate-500">
         Enter scores as marked on paper. Rows already
         saved are locked — request an edit if a
         correction is needed.
@@ -567,45 +567,151 @@ export default function MarkEntryGrid() {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden">
+        <div className="space-y-3">
+          {rows.map((row, i) => {
+            const locked = Boolean(row.mark_id);
+
+            const rowError = errors.find(
+              (e) => e.student_id === row.student_id
+            );
+
+            return (
+              <article
+                key={row.student_id}
+                className={`rounded-xl border border-slate-200 bg-white p-3 shadow-sm ${
+                  locked ? "bg-slate-50" : ""
+                }`}
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      {row.admission_number}
+                    </p>
+                    <h2 className="mt-0.5 break-words text-sm font-semibold leading-5 text-slate-900">
+                      {row.name}
+                    </h2>
+                  </div>
+
+                  {locked && (
+                    <span className="shrink-0 rounded-full bg-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600">
+                      Saved
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                      Score / {assessment.max_score}
+                    </label>
+
+                    <input
+                      ref={(el) =>
+                        (inputRefs.current[i] = el)
+                      }
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      disabled={
+                        locked || row.status !== "present"
+                      }
+                      value={row.score ?? ""}
+                      onChange={(e) =>
+                        updateRow(i, {
+                          score: e.target.value,
+                        })
+                      }
+                      onKeyDown={(e) =>
+                        handleKeyDown(e, i)
+                      }
+                      className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-100 disabled:text-slate-400"
+                      aria-label={`Score for ${row.name}`}
+                    />
+
+                    {rowError && (
+                      <div className="mt-1 break-words text-xs leading-4 text-red-600">
+                        {rowError.errors.join(", ")}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                      Status
+                    </label>
+
+                    <select
+                      disabled={locked}
+                      value={row.status}
+                      onChange={(e) =>
+                        updateRow(i, {
+                          status: e.target.value,
+                          score:
+                            e.target.value === "present"
+                              ? row.score
+                              : null,
+                        })
+                      }
+                      className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-100 disabled:text-slate-400"
+                      aria-label={`Status for ${row.name}`}
+                    >
+                      <option value="present">
+                        Present
+                      </option>
+                      <option value="absent">
+                        Absent
+                      </option>
+                      <option value="incomplete">
+                        Incomplete
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                {locked && (
+                  <button
+                    type="button"
+                    onClick={() => openEditRequest(row)}
+                    className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium underline transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    style={{
+                      color: "var(--color-gold)",
+                    }}
+                  >
+                    Request Edit
+                  </button>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full overflow-hidden rounded-lg border border-slate-200 text-sm">
           <thead className="bg-slate-100 text-left text-slate-600">
             <tr>
-              <th className="px-3 py-2">
-                Adm No
-              </th>
-              <th className="px-3 py-2">
-                Name
-              </th>
-              <th className="w-28 px-3 py-2">
-                Score
-              </th>
-              <th className="w-36 px-3 py-2">
-                Status
-              </th>
+              <th className="px-3 py-2">Adm No</th>
+              <th className="px-3 py-2">Name</th>
+              <th className="w-28 px-3 py-2">Score</th>
+              <th className="w-36 px-3 py-2">Status</th>
               <th className="px-3 py-2"></th>
             </tr>
           </thead>
 
           <tbody>
             {rows.map((row, i) => {
-              const locked = Boolean(
-                row.mark_id
-              );
+              const locked = Boolean(row.mark_id);
 
               const rowError = errors.find(
-                (e) =>
-                  e.student_id ===
-                  row.student_id
+                (e) => e.student_id === row.student_id
               );
 
               return (
                 <tr
                   key={row.student_id}
                   className={`border-t border-slate-100 ${
-                    locked
-                      ? "bg-slate-50"
-                      : ""
+                    locked ? "bg-slate-50" : ""
                   }`}
                 >
                   <td className="px-3 py-2 text-slate-500">
@@ -619,39 +725,28 @@ export default function MarkEntryGrid() {
                   <td className="px-3 py-2">
                     <input
                       ref={(el) =>
-                        (inputRefs.current[i] =
-                          el)
+                        (inputRefs.current[i] = el)
                       }
                       type="number"
                       step="0.01"
                       disabled={
-                        locked ||
-                        row.status !==
-                          "present"
+                        locked || row.status !== "present"
                       }
-                      value={
-                        row.score ?? ""
-                      }
+                      value={row.score ?? ""}
                       onChange={(e) =>
                         updateRow(i, {
-                          score:
-                            e.target.value,
+                          score: e.target.value,
                         })
                       }
                       onKeyDown={(e) =>
-                        handleKeyDown(
-                          e,
-                          i
-                        )
+                        handleKeyDown(e, i)
                       }
                       className="w-20 rounded border border-slate-300 px-2 py-1 disabled:bg-slate-100"
                     />
 
                     {rowError && (
                       <div className="mt-1 text-xs text-red-600">
-                        {rowError.errors.join(
-                          ", "
-                        )}
+                        {rowError.errors.join(", ")}
                       </div>
                     )}
                   </td>
@@ -662,23 +757,17 @@ export default function MarkEntryGrid() {
                       value={row.status}
                       onChange={(e) =>
                         updateRow(i, {
-                          status:
-                            e.target.value,
+                          status: e.target.value,
                           score:
-                            e.target.value ===
-                            "present"
+                            e.target.value === "present"
                               ? row.score
                               : null,
                         })
                       }
                       className="rounded border border-slate-300 px-2 py-1 disabled:bg-slate-100"
                     >
-                      <option value="present">
-                        Present
-                      </option>
-                      <option value="absent">
-                        Absent
-                      </option>
+                      <option value="present">Present</option>
+                      <option value="absent">Absent</option>
                       <option value="incomplete">
                         Incomplete
                       </option>
@@ -688,15 +777,11 @@ export default function MarkEntryGrid() {
                   <td className="px-3 py-2">
                     {locked && (
                       <button
-                        onClick={() =>
-                          openEditRequest(
-                            row
-                          )
-                        }
+                        type="button"
+                        onClick={() => openEditRequest(row)}
                         className="text-xs underline"
                         style={{
-                          color:
-                            "var(--color-gold)",
+                          color: "var(--color-gold)",
                         }}
                       >
                         Request Edit
@@ -713,7 +798,7 @@ export default function MarkEntryGrid() {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="mt-4 rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:opacity-60 sm:w-auto"
         style={{
           backgroundColor:
             "var(--color-navy)",
@@ -726,7 +811,7 @@ export default function MarkEntryGrid() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <form
             onSubmit={submitEditRequest}
-            className="w-full max-w-sm rounded-lg bg-white p-6 shadow-lg"
+            className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-4 shadow-lg sm:p-6"
           >
             <h2
               className="mb-1 text-base font-semibold"
@@ -768,7 +853,7 @@ export default function MarkEntryGrid() {
                     e.target.value,
                 })
               }
-              className="mb-3 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mb-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base sm:text-sm"
             >
               <option value="present">
                 Present
@@ -802,7 +887,7 @@ export default function MarkEntryGrid() {
                         e.target.value,
                     })
                   }
-                  className="mb-3 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mb-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base sm:text-sm"
                 />
               </>
             )}
@@ -824,17 +909,17 @@ export default function MarkEntryGrid() {
                 })
               }
               placeholder="e.g. Recount after dispute"
-              className="mb-4 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base sm:text-sm"
               rows={2}
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() =>
                   setEditRequestRow(null)
                 }
-                className="px-3 py-2 text-sm text-slate-500"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg px-3 py-2 text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
                 Cancel
               </button>
@@ -844,7 +929,7 @@ export default function MarkEntryGrid() {
                 disabled={
                   editRequestSaving
                 }
-                className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                 style={{
                   backgroundColor:
                     "var(--color-navy)",
