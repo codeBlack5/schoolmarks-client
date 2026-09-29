@@ -289,12 +289,12 @@ export default function TeacherAssessments() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="w-full min-w-0 space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:p-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-lg"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
             style={{ backgroundColor: "var(--color-navy)" }}
           >
             <ClipboardList className="text-white" size={20} />
@@ -302,13 +302,13 @@ export default function TeacherAssessments() {
 
           <div>
             <h1
-              className="text-xl font-semibold"
+              className="break-words text-xl font-semibold sm:text-2xl"
               style={{ color: "var(--color-navy)" }}
             >
               Assessments
             </h1>
 
-            <p className="text-sm text-slate-500">
+            <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
               Review assessments and continue marking your students.
             </p>
           </div>
@@ -316,7 +316,7 @@ export default function TeacherAssessments() {
       </div>
 
       {/* Class selector */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <label className="mb-2 block text-sm font-medium text-slate-700">
           Class
         </label>
@@ -325,7 +325,7 @@ export default function TeacherAssessments() {
           value={gradeId}
           onChange={handleClassChange}
           disabled={loadingClasses || classes.length === 0}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-50 sm:max-w-sm"
+          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-50 sm:max-w-sm sm:text-sm"
         >
           {loadingClasses && (
             <option value="">Loading classes...</option>
@@ -358,14 +358,14 @@ export default function TeacherAssessments() {
       </div>
 
       {error && !loadingClasses && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-5 text-red-700 sm:p-4">
           {error}
         </div>
       )}
 
       {loadingAssessments && gradeId && (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
-          <p className="text-sm text-slate-500">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center sm:p-10">
+          <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
             Loading assessments...
           </p>
         </div>
@@ -375,7 +375,7 @@ export default function TeacherAssessments() {
         !error &&
         !gradeId &&
         !loadingClasses && (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center sm:p-10">
             <BookOpen
               className="mx-auto mb-3 text-slate-400"
               size={36}
@@ -385,7 +385,7 @@ export default function TeacherAssessments() {
               Select a class
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 break-words text-sm leading-5 text-slate-500">
               Choose one of your classes to view its assessments.
             </p>
           </div>
@@ -394,7 +394,7 @@ export default function TeacherAssessments() {
       {data && !loadingAssessments && !error && (
         <>
           {/* Statistics */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             <StatCard
               label="Total"
               value={statistics.total}
@@ -417,7 +417,7 @@ export default function TeacherAssessments() {
           </div>
 
           {/* Filters */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="relative">
                 <Search
@@ -431,7 +431,7 @@ export default function TeacherAssessments() {
                     setSearch(event.target.value)
                   }
                   placeholder="Search assessments..."
-                  className="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm"
+                  className="min-h-11 w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
               </div>
 
@@ -440,7 +440,7 @@ export default function TeacherAssessments() {
                 onChange={(event) =>
                   setSubjectFilter(event.target.value)
                 }
-                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:text-sm"
               >
                 <option value="all">All subjects</option>
 
@@ -456,7 +456,7 @@ export default function TeacherAssessments() {
                 onChange={(event) =>
                   setTypeFilter(event.target.value)
                 }
-                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:text-sm"
               >
                 <option value="all">All assessment types</option>
                 <option value="opener">Opener</option>
@@ -469,7 +469,7 @@ export default function TeacherAssessments() {
 
           {/* Assessment list */}
           {filteredAssessments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center sm:p-10">
               <ClipboardList
                 className="mx-auto mb-3 text-slate-400"
                 size={36}
@@ -488,7 +488,7 @@ export default function TeacherAssessments() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {groupedAssessments.map(({ type, assessments }) => (
                 <AssessmentTypeGroup
                   key={type}
@@ -506,13 +506,13 @@ export default function TeacherAssessments() {
 
 function StatCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 sm:text-xs">
         {label}
       </p>
 
       <p
-        className="mt-1 text-2xl font-semibold"
+        className="mt-1 text-2xl font-semibold sm:text-3xl"
         style={{ color: "var(--color-navy)" }}
       >
         {value}
@@ -536,7 +536,7 @@ function AssessmentTypeGroup({ type, assessments }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+        className="flex min-h-16 w-full items-center justify-between gap-3 px-3 py-3.5 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-200 sm:gap-4 sm:px-5 sm:py-4"
       >
         <div className="flex min-w-0 items-center gap-3">
           <div
@@ -552,9 +552,9 @@ function AssessmentTypeGroup({ type, assessments }) {
           </div>
 
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h2
-                className="font-semibold"
+                className="break-words font-semibold"
                 style={{
                   color: "var(--color-navy)",
                 }}
@@ -562,7 +562,7 @@ function AssessmentTypeGroup({ type, assessments }) {
                 {getAssessmentTypeLabel(type)}
               </h2>
 
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
                 {total} {total === 1 ? "assessment" : "assessments"}
               </span>
             </div>
@@ -604,23 +604,23 @@ function AssessmentCard({ assessment }) {
   const StatusIcon = status.icon;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-semibold text-slate-900">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h2 className="min-w-0 break-words font-semibold leading-5 text-slate-900">
               {assessment.name}
             </h2>
 
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
+              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
             >
               <StatusIcon size={13} />
               {status.label}
             </span>
           </div>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 break-words text-sm leading-5 text-slate-500">
             {assessment.subject?.name}
             {" · "}
             {assessment.term?.name}
@@ -629,8 +629,8 @@ function AssessmentCard({ assessment }) {
           </p>
         </div>
 
-        <div className="text-left lg:text-right">
-            <p className="text-sm font-medium text-slate-700">
+        <div className="min-w-0 text-left lg:text-right">
+            <p className="break-words text-sm font-medium text-slate-700">
                 {assessment.marking?.processed ?? assessment.marked_count} /{" "}
                 {assessment.students_count} processed
             </p>
@@ -667,7 +667,7 @@ function AssessmentCard({ assessment }) {
         </div>
 
       <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-slate-500">
+        <p className="break-words text-xs leading-5 text-slate-500">
           {assessment.date_administered
             ? `Administered ${assessment.date_administered}`
             : "Date not recorded"}
@@ -675,7 +675,7 @@ function AssessmentCard({ assessment }) {
 
         <Link
           to={`/teacher/mark-entry/${assessment.id}`}
-          className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-slate-300 sm:w-auto"
           style={{ backgroundColor: "var(--color-navy)" }}
         >
           {assessment.marking_complete
