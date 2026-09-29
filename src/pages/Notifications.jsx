@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 
 const TYPE_CONFIG = {
+  assessment_created: {
+    label: "New Assessment",
+    icon: Bell,
+  },
   assessment_due: {
     label: "Assessment Due",
     icon: Clock,
@@ -132,7 +136,7 @@ export default function Notifications() {
       setUnreadCount(0);
       window.dispatchEvent(
         new CustomEvent("schoolmarks:notifications-updated")
-     );
+      );
     } catch (err) {
       console.error("Failed to mark all notifications as read:", err);
     } finally {
@@ -190,7 +194,9 @@ export default function Notifications() {
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
               {notifications.length}{" "}
-              {notifications.length === 1 ? "notification" : "notifications"}
+              {notifications.length === 1
+                ? "notification"
+                : "notifications"}
             </span>
 
             <span
