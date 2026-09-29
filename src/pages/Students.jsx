@@ -333,31 +333,31 @@ export default function Students() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6">
-      <div className="mb-5">
+    <div className="mx-auto w-full min-w-0 max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mb-5 min-w-0">
         <h1
-          className="text-xl font-semibold"
+          className="break-words text-xl font-semibold sm:text-2xl"
           style={{ color: "var(--color-navy)" }}
         >
           Students
         </h1>
 
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
           Manage students, records and student lifecycle.
         </p>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-slate-700">
             Grade
           </label>
 
           <select
             value={gradeId}
             onChange={(e) => setGradeId(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"
+            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
           >
             <option value="">Select a grade...</option>
 
@@ -370,14 +370,14 @@ export default function Students() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-slate-700">
             Student Status
           </label>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"
+            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
           >
             {STATUS_OPTIONS.map((option) => (
               <option
@@ -391,7 +391,7 @@ export default function Students() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-slate-700">
             Search Student
           </label>
 
@@ -401,14 +401,14 @@ export default function Students() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Name or admission number..."
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-10 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
             />
 
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 aria-label="Clear search"
               >
                 ×
@@ -421,18 +421,18 @@ export default function Students() {
       {gradeId && (
         <>
           {/* Tools */}
-          <div className="flex flex-wrap items-center gap-4 mb-6 text-sm">
+          <div className="mb-5 flex flex-col gap-2.5 text-sm sm:mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <button
               type="button"
               onClick={handleTemplateDownload}
-              className="underline"
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-center font-medium underline transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:border-0 sm:px-0"
               style={{ color: "var(--color-gold)" }}
             >
               Download Excel Template
             </button>
 
             <label
-              className="underline cursor-pointer"
+              className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-center font-medium underline transition hover:bg-slate-50 focus-within:ring-2 focus-within:ring-slate-200 sm:border-0 sm:px-0"
               style={{ color: "var(--color-gold)" }}
             >
               {uploading
@@ -453,8 +453,8 @@ export default function Students() {
           {uploadResult &&
             !uploadResult.error &&
             uploadResult.errors?.length > 0 && (
-              <div className="mb-6 text-sm rounded-md border border-slate-200 p-3">
-                <ul className="space-y-1 text-red-600 text-xs">
+              <div className="mb-5 rounded-lg border border-slate-200 p-3 text-sm sm:mb-6 sm:p-4">
+                <ul className="space-y-1 break-words text-xs text-red-600">
                   {uploadResult.errors.map((e, i) => (
                     <li key={i}>
                       Row {e.row} (
@@ -471,9 +471,9 @@ export default function Students() {
           {statusFilter === "active" && (
             <form
               onSubmit={handleCreate}
-              className="mb-6 border border-slate-200 rounded-lg p-4 space-y-2"
+              className="mb-5 space-y-2 rounded-xl border border-slate-200 p-3 shadow-sm sm:mb-6 sm:p-4"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <input
                   required
                   placeholder="Student name"
@@ -484,7 +484,7 @@ export default function Students() {
                       name: e.target.value,
                     })
                   }
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="min-h-11 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
 
                 <input
@@ -497,7 +497,7 @@ export default function Students() {
                       admission_number: e.target.value,
                     })
                   }
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="min-h-11 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
               </div>
 
@@ -505,7 +505,7 @@ export default function Students() {
                 Guardian contact (optional)
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <input
                   placeholder="Guardian name"
                   value={form.guardian_name}
@@ -515,7 +515,7 @@ export default function Students() {
                       guardian_name: e.target.value,
                     })
                   }
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="min-h-11 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
 
                 <input
@@ -527,7 +527,7 @@ export default function Students() {
                       guardian_phone: e.target.value,
                     })
                   }
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="min-h-11 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
 
                 <input
@@ -539,12 +539,12 @@ export default function Students() {
                       guardian_relationship: e.target.value,
                     })
                   }
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="min-h-11 rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
               </div>
 
               <button
-                className="rounded-md px-4 py-2 text-sm font-medium text-white"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-slate-300 sm:w-auto"
                 style={{
                   backgroundColor: "var(--color-navy)",
                 }}
@@ -555,13 +555,13 @@ export default function Students() {
           )}
 
           {error && (
-            <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700">
               {error}
             </div>
           )}
 
           {/* Student count */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex min-w-0 items-center justify-between">
             <div>
               <h2
                 className="font-medium text-sm"
@@ -584,10 +584,227 @@ export default function Students() {
             </div>
           </div>
 
-          {/* Student table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
-              <thead className="bg-slate-100 text-slate-600 text-left">
+          {/* Student cards on mobile */}
+          <div className="space-y-3 md:hidden">
+            {filteredStudents.map((s) => (
+              <article
+                key={s.id}
+                className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+              >
+                {editingId === s.id ? (
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                          Edit student
+                        </p>
+                        <p className="mt-1 break-words font-semibold text-slate-900">
+                          {s.name}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs text-slate-500">
+                        {STATUS_LABELS[s.status] || s.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      <input
+                        aria-label="Admission number"
+                        value={editForm.admission_number}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            admission_number: e.target.value,
+                          })
+                        }
+                        className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100"
+                        placeholder="Admission No."
+                      />
+
+                      <input
+                        aria-label="Student name"
+                        value={editForm.name}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            name: e.target.value,
+                          })
+                        }
+                        className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100"
+                        placeholder="Student name"
+                      />
+
+                      <input
+                        aria-label="Guardian name"
+                        placeholder="Guardian name"
+                        value={editForm.guardian_name}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            guardian_name: e.target.value,
+                          })
+                        }
+                        className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100"
+                      />
+
+                      <input
+                        aria-label="Guardian relationship"
+                        placeholder="Relationship"
+                        value={editForm.guardian_relationship}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            guardian_relationship: e.target.value,
+                          })
+                        }
+                        className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100"
+                      />
+
+                      <input
+                        aria-label="Guardian phone"
+                        placeholder="Guardian phone"
+                        value={editForm.guardian_phone}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            guardian_phone: e.target.value,
+                          })
+                        }
+                        className="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-[var(--color-navy)] focus:ring-2 focus:ring-slate-100"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => saveEdit(s.id)}
+                        className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-slate-300"
+                        style={{ backgroundColor: "var(--color-navy)" }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(null)}
+                        className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words font-semibold leading-5 text-slate-900">
+                          {s.name}
+                        </p>
+                        <p className="mt-1 break-words text-xs text-slate-500">
+                          Adm No: {s.admission_number}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`shrink-0 inline-flex items-center rounded-full border px-2 py-1 text-xs ${
+                          s.status === "active"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : s.status === "archived"
+                            ? "bg-slate-100 text-slate-600 border-slate-200"
+                            : "bg-blue-50 text-blue-700 border-blue-200"
+                        }`}
+                      >
+                        {STATUS_LABELS[s.status] || s.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 gap-2 rounded-lg bg-slate-50 p-2.5 text-xs">
+                      <div>
+                        <p className="text-slate-400">Guardian</p>
+                        <p className="mt-0.5 break-words font-medium text-slate-700">
+                          {s.guardian_name
+                            ? `${s.guardian_name}${
+                                s.guardian_relationship
+                                  ? ` (${s.guardian_relationship})`
+                                  : ""
+                              }`
+                            : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400">Phone</p>
+                        <p className="mt-0.5 break-words font-medium text-slate-700">
+                          {s.guardian_phone || "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <Link
+                        to={`/students/${s.id}`}
+                        className="inline-flex min-h-10 items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold underline focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        style={{ color: "var(--color-navy)" }}
+                      >
+                        Records
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => startEdit(s)}
+                        className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      >
+                        Edit
+                      </button>
+
+                      {s.status === "active" && (
+                        <button
+                          type="button"
+                          onClick={() => handleArchive(s)}
+                          className="inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-100 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                        >
+                          Archive
+                        </button>
+                      )}
+
+                      {s.status === "archived" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleRestore(s)}
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-green-100 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-100"
+                          >
+                            Restore
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handlePermanentDelete(s)}
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-100 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-100"
+                          >
+                            Permanently Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </article>
+            ))}
+
+            {filteredStudents.length === 0 && (
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-400">
+                {searchTerm
+                  ? `No students found matching "${searchTerm}".`
+                  : `No ${
+                      STATUS_LABELS[statusFilter]?.toLowerCase() || ""
+                    } students found in this grade.`}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop student table */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full overflow-hidden rounded-lg border border-slate-200 text-sm">
+              <thead className="bg-slate-100 text-left text-slate-600">
                 <tr>
                   <th className="px-3 py-2">Adm No</th>
                   <th className="px-3 py-2">Name</th>
