@@ -231,7 +231,7 @@ export default function TeacherAnalytics() {
 
   if (filtersLoading) {
     return (
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="mx-auto w-full min-w-0 max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
           Loading analytics filters...
         </div>
@@ -240,11 +240,11 @@ export default function TeacherAnalytics() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 space-y-5 sm:space-y-6">
       {/* Page heading */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
           Teacher Analytics
         </h1>
 
@@ -263,7 +263,7 @@ export default function TeacherAnalytics() {
           }
         }}
         disabled={!termId || analyticsLoading || exporting}
-        className="inline-flex items-center justify-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {exporting ? "Generating PDF..." : "Download PDF"}
       </button>
@@ -291,7 +291,7 @@ export default function TeacherAnalytics() {
           <button
             type="button"
             onClick={handleReset}
-            className="text-xs font-medium text-slate-500 hover:text-slate-800"
+            className="min-h-10 px-2 text-xs font-medium text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200 rounded-md"
           >
             Clear filters
           </button>
@@ -307,7 +307,7 @@ export default function TeacherAnalytics() {
             <select
               value={termId}
               onChange={(event) => setTermId(event.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+              className="min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
               <option value="">Select a term...</option>
 
@@ -352,7 +352,7 @@ export default function TeacherAnalytics() {
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
               disabled={!gradeId || subjects.length === 0}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              className="min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
               <option value="">
                 {!gradeId
@@ -413,7 +413,7 @@ export default function TeacherAnalytics() {
           <button
             type="button"
             onClick={refetch}
-            className="mt-3 rounded-md px-3 py-2 text-sm font-medium text-white"
+            className="mt-3 inline-flex min-h-10 w-full sm:w-auto items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-slate-300"
             style={{ backgroundColor: "var(--color-navy)" }}
           >
             Try again
@@ -423,7 +423,7 @@ export default function TeacherAnalytics() {
 
       {/* Empty state */}
       {!analyticsLoading && !analyticsError && !data && termId && (
-        <div className="rounded-lg border border-slate-200 bg-white p-8 text-center">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8 text-center">
           <p className="text-sm text-slate-500">
             No analytics data is available for the selected term.
           </p>
