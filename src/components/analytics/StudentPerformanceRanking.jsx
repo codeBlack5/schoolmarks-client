@@ -18,7 +18,7 @@ export default function StudentPerformanceRanking({
   return (
     <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-slate-100">
+      <div className="p-4 sm:p-5 border-b border-slate-100 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2
@@ -38,7 +38,7 @@ export default function StudentPerformanceRanking({
             <button
               type="button"
               onClick={() => setView("overall")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+              className={`min-h-10 px-3 py-2 rounded-md text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-slate-200 ${
                 view === "overall"
                   ? "bg-white text-slate-800 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
@@ -80,7 +80,7 @@ export default function StudentPerformanceRanking({
               onChange={(event) =>
                 setSelectedSubjectId(event.target.value)
               }
-              className="w-full sm:max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+              className="min-h-11 w-full sm:max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
               <option value="">
                 Select a learning area...
@@ -178,66 +178,107 @@ function SubjectRanking({ subject }) {
 
 function RankingTable({ students }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-white text-slate-500 text-xs uppercase tracking-wide">
-          <tr>
-            <th className="px-4 py-3 text-center font-semibold">
-              Rank
-            </th>
-
-            <th className="px-4 py-3 text-left font-semibold">
-              Student
-            </th>
-
-            <th className="px-4 py-3 text-left font-semibold">
-              Admission No.
-            </th>
-
-            <th className="px-4 py-3 text-right font-semibold">
-              Mean Score
-            </th>
-
-            <th className="px-4 py-3 text-right font-semibold">
-              Learning Areas
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {students.map((student, index) => (
-            <tr
-              key={student.student_id}
-              className={`border-t border-slate-100 hover:bg-slate-50 ${
-                index < 3 ? "bg-slate-50/50" : ""
-              }`}
-            >
-              <td className="px-4 py-3 text-center">
+    <>
+      <div className="md:hidden p-4 space-y-3">
+        {students.map((student, index) => (
+          <article
+            key={student.student_id}
+            className={`rounded-xl border border-slate-200 bg-slate-50 p-4 ${
+              index < 3 ? "ring-1 ring-slate-100" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <RankBadge rank={student.rank} />
-              </td>
 
-              <td className="px-4 py-3">
-                <div className="font-medium text-slate-700">
-                  {student.student_name}
+                <div className="min-w-0">
+                  <p className="break-words font-semibold text-slate-700">
+                    {student.student_name}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    {student.admission_number || "—"}
+                  </p>
                 </div>
-              </td>
+              </div>
 
-              <td className="px-4 py-3 text-slate-500">
-                {student.admission_number || "—"}
-              </td>
+              <ScoreBadge score={student.mean_score} />
+            </div>
 
-              <td className="px-4 py-3 text-right">
-                <ScoreBadge score={student.mean_score} />
-              </td>
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs">
+              <span className="text-slate-400">
+                Learning areas assessed
+              </span>
 
-              <td className="px-4 py-3 text-right text-slate-500">
+              <span className="font-medium text-slate-600">
                 {student.subjects_assessed ?? "—"}
-              </td>
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-sm">
+          <thead className="bg-white text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="px-4 py-3 text-center font-semibold">
+                Rank
+              </th>
+
+              <th className="px-4 py-3 text-left font-semibold">
+                Student
+              </th>
+
+              <th className="px-4 py-3 text-left font-semibold">
+                Admission No.
+              </th>
+
+              <th className="px-4 py-3 text-right font-semibold">
+                Mean Score
+              </th>
+
+              <th className="px-4 py-3 text-right font-semibold">
+                Learning Areas
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+            {students.map((student, index) => (
+              <tr
+                key={student.student_id}
+                className={`border-t border-slate-100 hover:bg-slate-50 ${
+                  index < 3 ? "bg-slate-50/50" : ""
+                }`}
+              >
+                <td className="px-4 py-3 text-center">
+                  <RankBadge rank={student.rank} />
+                </td>
+
+                <td className="px-4 py-3">
+                  <div className="font-medium text-slate-700">
+                    {student.student_name}
+                  </div>
+                </td>
+
+                <td className="px-4 py-3 text-slate-500">
+                  {student.admission_number || "—"}
+                </td>
+
+                <td className="px-4 py-3 text-right">
+                  <ScoreBadge score={student.mean_score} />
+                </td>
+
+                <td className="px-4 py-3 text-right text-slate-500">
+                  {student.subjects_assessed ?? "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

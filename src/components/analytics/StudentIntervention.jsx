@@ -10,7 +10,7 @@ export default function StudentIntervention({
   return (
     <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-slate-100">
+      <div className="p-4 sm:p-5 border-b border-slate-100 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2
@@ -30,7 +30,7 @@ export default function StudentIntervention({
             <button
               type="button"
               onClick={() => setView("declining")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+              className={`min-h-10 px-3 py-2 rounded-md text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-slate-200 ${
                 view === "declining"
                   ? "bg-white text-slate-800 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
@@ -111,7 +111,27 @@ function DecliningStudents({ students }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden p-4 space-y-3">
+        {sortedStudents.map((student, index) => (
+          <article key={`${student.student_id}-${student.subject_id}-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-700 break-words">{student.student_name}</p>
+                <p className="mt-1 text-xs text-slate-400">{student.admission_number || "—"}</p>
+              </div>
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 shrink-0">-{formatScore(student.decline)}</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div><p className="text-slate-400">Previous</p><p className="mt-1 font-medium text-slate-700">{formatScore(student.previous_score)}</p></div>
+              <div><p className="text-slate-400">Current</p><p className="mt-1 font-medium text-slate-700">{formatScore(student.current_score)}</p></div>
+            </div>
+            <p className="mt-3 text-xs text-slate-400 break-words">{student.previous_assessment} → {student.current_assessment}</p>
+            <Link to={`/teacher/students/${student.student_id}/interventions?subject_id=${student.subject_id}&reason=decline&baseline_score=${student.current_score}`} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-md px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-slate-300" style={{ backgroundColor: "var(--color-navy)" }}>Review / Intervene</Link>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
             <tr>
@@ -267,7 +287,63 @@ function InterventionStudents({ students }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden p-4 space-y-3">
+        {sortedStudents.map((student) => (
+          <article
+            key={student.student_id}
+            className="rounded-xl border border-slate-200 bg-slate-50 p-4 min-w-0"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-700 break-words">
+                  {student.student_name}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {student.admission_number || "—"}
+                </p>
+              </div>
+              <ScoreBadge score={student.mean_score} />
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <p className="text-slate-400">Areas below target</p>
+                <p className="mt-1 font-medium text-slate-700">
+                  {student.subjects_below_target ?? 0} / {student.total_subjects ?? 0}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Learning areas</p>
+                <p className="mt-1 font-medium text-slate-700 break-words">
+                  {(student.subjects || []).map((subject) => subject.subject_name).join(", ") || "None identified"}
+                </p>
+              </div>
+            </div>
+
+            {student.subjects?.length > 0 ? (
+              <div className="mt-3 space-y-2">
+                {student.subjects.map((subject) => (
+                  <Link
+                    key={subject.subject_id}
+                    to={`/teacher/students/${student.student_id}/interventions?subject_id=${subject.subject_id}&reason=below_target&baseline_score=${subject.mean_score}&target_score=50`}
+                    className="inline-flex min-h-10 w-full items-center justify-center rounded-md px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    style={{ backgroundColor: "var(--color-navy)" }}
+                  >
+                    Intervene — {subject.subject_name}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-slate-400">
+                No subject identified
+              </p>
+            )}
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
             <tr>

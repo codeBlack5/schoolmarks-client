@@ -1,7 +1,7 @@
 export default function LearningAreaPerformance({ learningAreas = [] }) {
   if (learningAreas.length === 0) {
     return (
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm min-w-0">
         <div className="mb-4">
           <h2
             className="text-base font-semibold"
@@ -34,7 +34,7 @@ export default function LearningAreaPerformance({ learningAreas = [] }) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-slate-100">
+      <div className="p-4 sm:p-5 border-b border-slate-100 min-w-0">
         <h2
           className="text-base font-semibold"
           style={{ color: "var(--color-navy)" }}
@@ -49,7 +49,7 @@ export default function LearningAreaPerformance({ learningAreas = [] }) {
       </div>
 
       {/* Visual comparison */}
-      <div className="p-5 border-b border-slate-100">
+      <div className="p-4 sm:p-5 border-b border-slate-100 min-w-0">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-semibold text-slate-700">
@@ -72,7 +72,7 @@ export default function LearningAreaPerformance({ learningAreas = [] }) {
               <div key={area.subject_id}>
                 <div className="flex items-center justify-between gap-3 mb-1">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-700 truncate">
+                    <p className="text-sm font-medium text-slate-700 break-words">
                       {area.subject_name}
                     </p>
 
@@ -112,7 +112,27 @@ export default function LearningAreaPerformance({ learningAreas = [] }) {
       </div>
 
       {/* Detailed table */}
-      <div className="overflow-x-auto">
+      <div className="md:hidden p-4 space-y-3">
+        {sortedLearningAreas.map((area) => (
+          <article key={area.subject_id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-700 break-words">{area.subject_name}</p>
+                <p className="mt-1 text-xs text-slate-400">{area.grade_name}</p>
+              </div>
+              <ScoreBadge score={area.mean_score} />
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div><p className="text-slate-400">Highest</p><p className="mt-1 font-medium text-slate-700">{formatScore(area.highest_score)}</p></div>
+              <div><p className="text-slate-400">Lowest</p><p className="mt-1 font-medium text-slate-700">{formatScore(area.lowest_score)}</p></div>
+              <div><p className="text-slate-400">Students</p><p className="mt-1 font-medium text-slate-700">{area.students_assessed ?? 0}</p></div>
+              <div><p className="text-slate-400">Meeting target</p><p className="mt-1 font-medium text-slate-700">{area.meeting_expectations ?? 0} ({area.meeting_expectations_percentage ?? 0}%)</p></div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
             <tr>

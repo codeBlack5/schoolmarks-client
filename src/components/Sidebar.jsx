@@ -286,14 +286,21 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <aside
+      id="app-navigation"
+      aria-label="Main navigation"
       className={`
-        fixed inset-y-0 left-0 z-40 w-64
-        bg-white border-r border-slate-200
-        p-4 flex flex-col
+        fixed inset-y-0 left-0 z-40
+        flex w-[min(82vw,20rem)] flex-col
+        overflow-hidden border-r border-slate-200 bg-white p-4
+        shadow-xl
         transform transition-transform duration-200 ease-in-out
-        md:static md:z-auto md:w-56 md:translate-x-0
+        md:static md:z-auto md:w-56 md:translate-x-0 md:shadow-none
         ${open ? "translate-x-0" : "-translate-x-full"}
       `}
+      style={{
+        paddingTop: "max(1rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+      }}
     >
       {/* =====================================================
           HEADER
@@ -341,7 +348,14 @@ export default function Sidebar({ open, onClose }) {
 
         <button
           onClick={onClose}
-          className="md:hidden text-slate-400 text-xl leading-none px-1 shrink-0"
+          type="button"
+          className="
+            flex h-9 w-9 shrink-0 items-center justify-center
+            rounded-lg text-slate-400
+            hover:bg-slate-50 hover:text-slate-700
+            focus:outline-none focus:ring-2 focus:ring-slate-200
+            md:hidden
+          "
           aria-label="Close menu"
         >
           &times;
