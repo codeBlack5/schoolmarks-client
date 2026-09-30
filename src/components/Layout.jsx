@@ -26,7 +26,7 @@ export default function Layout({ children, contentClassName = "" }) {
   }, [open]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-50">
+    <div className="h-screen overflow-hidden bg-slate-50">
       {open && (
         <button
           type="button"
@@ -36,13 +36,14 @@ export default function Layout({ children, contentClassName = "" }) {
         />
       )}
 
-      <div className="flex min-h-screen">
+      <div className="flex h-full min-h-0">
         <Sidebar open={open} onClose={() => setOpen(false)} />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <header
             className="
-              sticky top-0 z-20 flex min-h-14 items-center gap-3
+              fixed inset-x-0 top-0 z-20 flex min-h-14
+              items-center gap-3
               border-b border-slate-200 bg-white/95 px-4 py-3
               backdrop-blur md:hidden
             "
@@ -87,6 +88,7 @@ export default function Layout({ children, contentClassName = "" }) {
               >
                 Steelo Analytics
               </p>
+
               <p className="truncate text-[11px] text-slate-400">
                 School Management & Analytics
               </p>
@@ -95,7 +97,8 @@ export default function Layout({ children, contentClassName = "" }) {
 
           <main
             className={`
-              min-w-0 flex-1 overflow-x-hidden
+              min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden
+              pt-20 md:pt-0
               ${contentClassName}
             `}
           >

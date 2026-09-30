@@ -92,7 +92,91 @@ export default function Grades() {
 
       {error && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>}
 
-      <div className="overflow-x-auto">
+      <div className="space-y-3 md:hidden">
+        {grades.map((g) => (
+          <article key={g.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            {editingId === g.id ? (
+              <>
+                <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Name
+                </label>
+                <input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="min-h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+
+                <label className="mt-3 mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Level
+                </label>
+                <input
+                  type="number"
+                  value={editForm.level}
+                  onChange={(e) => setEditForm({ ...editForm, level: e.target.value })}
+                  className="min-h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                />
+
+                <label className="mt-3 mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Class Teacher
+                </label>
+                <select
+                  value={editForm.class_teacher_id}
+                  onChange={(e) => setEditForm({ ...editForm, class_teacher_id: e.target.value })}
+                  className="min-h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                >
+                  <option value="">None</option>
+                  {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+
+                <div className="mt-4 flex flex-col gap-2">
+                  <button
+                    onClick={() => saveEdit(g.id)}
+                    className="min-h-10 w-full rounded-md border border-slate-200 px-3 py-2 text-left text-sm font-medium"
+                    style={{ color: "var(--color-gold)" }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="min-h-10 w-full rounded-md border border-slate-200 px-3 py-2 text-left text-sm font-medium text-slate-500"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="font-medium text-slate-900 break-words">{g.name}</p>
+                <p className="mt-2 text-sm text-slate-600">Level: {g.level}</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Class Teacher: {g.class_teacher?.name || "—"}
+                </p>
+                <div className="mt-4 flex flex-col gap-2">
+                  <button
+                    onClick={() => startEdit(g)}
+                    className="min-h-10 w-full rounded-md border border-slate-200 px-3 py-2 text-left text-sm font-medium text-slate-500"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(g.id)}
+                    className="min-h-10 w-full rounded-md border border-red-100 px-3 py-2 text-left text-sm font-medium text-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
+          </article>
+        ))}
+        {grades.length === 0 && (
+          <div className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
+            No grades found.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
           <thead className="bg-slate-100 text-slate-600 text-left">
             <tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Level</th><th className="px-3 py-2">Class Teacher</th><th className="px-3 py-2"></th></tr>
@@ -114,7 +198,7 @@ export default function Grades() {
                         {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </td>
-                    <td className="px-3 py-2 space-x-2">
+                    <td className="px-3 py-2 space-x-2 whitespace-nowrap">
                       <button onClick={() => saveEdit(g.id)} className="underline" style={{ color: "var(--color-gold)" }}>Save</button>
                       <button onClick={() => setEditingId(null)} className="underline text-slate-500">Cancel</button>
                     </td>
@@ -124,7 +208,7 @@ export default function Grades() {
                     <td className="px-3 py-2">{g.name}</td>
                     <td className="px-3 py-2">{g.level}</td>
                     <td className="px-3 py-2 text-slate-500">{g.class_teacher?.name || "—"}</td>
-                    <td className="px-3 py-2 space-x-3">
+                    <td className="px-3 py-2 space-x-3 whitespace-nowrap">
                       <button onClick={() => startEdit(g)} className="underline text-slate-500">Edit</button>
                       <button onClick={() => handleDelete(g.id)} className="underline text-red-600">Delete</button>
                     </td>

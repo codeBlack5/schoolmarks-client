@@ -4,6 +4,11 @@ import { Link } from "react-router-dom";
 import client from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import EditSchoolModal from "./EditSchoolModal";
+import {
+  confirmAction,
+  notifyError,
+  notifySuccess,
+} from "../../lib/alerts";
 
 export default function SchoolsManager() {
   const [schools, setSchools] = useState([]);
@@ -20,7 +25,7 @@ export default function SchoolsManager() {
         setSchools(data);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to fetch system schools.");
         setLoading(false);
       });
@@ -33,18 +38,25 @@ export default function SchoolsManager() {
   };
 
   const handleDeleteSchool = async (school) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${school.name}"? This action is permanent and will remove all tenant records.`
-    );
+    const confirmed = await confirmAction({
+      title: "Delete school?",
+      text: `Are you sure you want to delete "${school.name}"? This action is permanent and will remove all tenant records.`,
+      confirmButtonText: "Yes, delete school",
+      danger: true,
+    });
 
-    if (!confirmDelete) return;
+    if (!confirmed) return;
 
     setDeletingId(school.id);
+
     try {
       await client.delete(`/schools/${school.id}`);
+
       setSchools((prev) => prev.filter((s) => s.id !== school.id));
+
+      notifySuccess(`${school.name} deleted successfully.`);
     } catch (err) {
-      alert(
+      notifyError(
         err.response?.data?.error ||
           err.response?.data?.message ||
           "Failed to delete the school portal."
@@ -54,19 +66,28 @@ export default function SchoolsManager() {
     }
   };
 
-  if (loading) return <div className="p-8 text-slate-500">Loading schools...</div>;
-  if (error) return <div className="p-8 text-red-500">{error}</div>;
+  if (loading) {
+    return <div className="p-8 text-slate-500">Loading schools...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center mb-8 border-b border-slate-200 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Registered School Tenants</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Registered School Tenants
+          </h1>
+
           <p className="text-sm text-slate-500 mt-1">
             Manage all onboarded schools on the CBC platform.
           </p>
         </div>
+
         <Link
           to="/admin/schools/new"
           className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
@@ -101,24 +122,33 @@ export default function SchoolsManager() {
                   <span className="text-xs bg-slate-100 text-slate-600 font-semibold px-2.5 py-1 rounded-full">
                     ID: #{school.id}
                   </span>
+
                   <button
                     onClick={() => setEditingSchool(school)}
                     className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"
                   >
                     <span>✏️ Edit</span>
                   </button>
+
                   <button
                     onClick={() => handleDeleteSchool(school)}
                     disabled={deletingId === school.id}
                     className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 disabled:opacity-50"
                   >
-                    <span>🗑️ {deletingId === school.id ? "..." : "Delete"}</span>
+                    <span>
+                      🗑️ {deletingId === school.id ? "..." : "Delete"}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900 mb-1">{school.name}</h3>
-              <p className="text-xs text-slate-500 mb-4">{school.address || "No address provided"}</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">
+                {school.name}
+              </h3>
+
+              <p className="text-xs text-slate-500 mb-4">
+                {school.address || "No address provided"}
+              </p>
 
               <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3 mb-6">
                 <div>✉️ {school.email || "No email"}</div>

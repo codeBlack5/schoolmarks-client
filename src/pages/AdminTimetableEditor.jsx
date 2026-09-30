@@ -57,6 +57,13 @@ function AdminTimetableEditor() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [deleteTimetableOpen, setDeleteTimetableOpen] = useState(false);
+  const [deletingTimetable, setDeletingTimetable] = useState(false);
+
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [statusValue, setStatusValue] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+
   useEffect(() => {
     loadData();
   }, [id]);
@@ -79,6 +86,8 @@ function AdminTimetableEditor() {
       ]);
 
       setTimetable(timetableResponse.data);
+      setStatusValue(timetableResponse.data?.status || "draft");
+      setStatusMessage("");
 
       setEntries(
         Array.isArray(entriesResponse.data)
@@ -273,6 +282,39 @@ function AdminTimetableEditor() {
     }
   }
 
+  async function handleStatusSave() {
+    if (!timetable || !statusValue) return;
+
+    setSavingStatus(true);
+    setStatusMessage("");
+    setError("");
+
+    try {
+      const response = await api.patch(`/timetables/${id}`, {
+        timetable: {
+          status: statusValue,
+        },
+      });
+
+      setTimetable(response.data);
+      setStatusValue(response.data?.status || statusValue);
+      setStatusMessage("Timetable status updated successfully.");
+    } catch (err) {
+      console.error(
+        "Failed to update timetable status:",
+        err
+      );
+
+      setError(
+        err?.response?.data?.errors?.join(", ") ||
+          err?.response?.data?.error ||
+          "Unable to update timetable status."
+      );
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
   function requestDelete(entry) {
     setDeleteTarget(entry);
   }
@@ -302,6 +344,33 @@ function AdminTimetableEditor() {
       );
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function confirmDeleteTimetable() {
+    if (!timetable) return;
+
+    setDeletingTimetable(true);
+    setError("");
+
+    try {
+      await api.delete(`/timetables/${id}`);
+      navigate("/timetable");
+    } catch (err) {
+      console.error(
+        "Failed to delete timetable:",
+        err
+      );
+
+      setError(
+        err?.response?.data?.errors?.join(", ") ||
+          err?.response?.data?.error ||
+          "Unable to delete timetable."
+      );
+
+      setDeleteTimetableOpen(false);
+    } finally {
+      setDeletingTimetable(false);
     }
   }
 
@@ -488,14 +557,61 @@ function AdminTimetableEditor() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => openCreateForm()}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Add Lesson
-          </button>
+          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[320px]">
+            <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
+              <div className="flex min-h-11 flex-1 items-center rounded-lg border border-slate-300 bg-white px-3">
+                <label
+                  htmlFor="timetable-status"
+                  className="mr-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Status
+                </label>
+
+                <select
+                  id="timetable-status"
+                  value={statusValue}
+                  onChange={(event) => setStatusValue(event.target.value)}
+                  className="min-w-0 flex-1 bg-transparent text-sm font-medium capitalize text-slate-800 outline-none"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleStatusSave}
+                disabled={
+                  savingStatus ||
+                  statusValue === timetable.status
+                }
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {savingStatus ? "Saving..." : "Save Status"}
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
+              <button
+                type="button"
+                onClick={() => openCreateForm()}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:flex-none"
+              >
+                <Plus className="h-4 w-4" />
+                Add Lesson
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeleteTimetableOpen(true)}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Timetable
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* =======================================================
@@ -504,6 +620,12 @@ function AdminTimetableEditor() {
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
+          </div>
+        )}
+
+        {statusMessage && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {statusMessage}
           </div>
         )}
 
@@ -723,121 +845,6 @@ function AdminTimetableEditor() {
               );
             })}
           </div>
-
-          {/* Mobile timetable */}
-          <div className="space-y-3 p-3 md:hidden">
-            {DAYS.map((day) => {
-              const dayEntries = entries
-                .filter((entry) => entry.day_of_week === day.key)
-                .sort((a, b) =>
-                  a.start_time.localeCompare(b.start_time)
-                );
-
-              return (
-                <section
-                  key={day.key}
-                  className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
-                >
-                  <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-3">
-                    <h3 className="font-semibold text-slate-900">
-                      {day.label}
-                    </h3>
-
-                    <button
-                      type="button"
-                      onClick={() => openCreateForm(day.key)}
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Add
-                    </button>
-                  </div>
-
-                  <div className="space-y-2 p-2">
-                    {dayEntries.length === 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => openCreateForm(day.key)}
-                        className="flex min-h-20 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-400 transition hover:border-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                      >
-                        <span className="flex items-center gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add lesson
-                        </span>
-                      </button>
-                    ) : (
-                      dayEntries.map((entry) => (
-                        <div
-                          key={entry.id}
-                          className="min-w-0 rounded-xl border border-blue-200 bg-blue-50 p-3"
-                        >
-                          <div className="flex min-w-0 items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <h4 className="break-words text-sm font-bold text-slate-900">
-                                {entry.subject?.name || "Subject"}
-                              </h4>
-
-                              <p className="mt-0.5 break-words text-xs font-medium text-blue-700">
-                                {entry.grade?.name || "Class"}
-                              </p>
-                            </div>
-
-                            <div className="flex shrink-0 items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => openEditForm(entry)}
-                                className="min-h-10 min-w-10 rounded-lg p-2 text-slate-500 transition hover:bg-white hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                                aria-label="Edit lesson"
-                              >
-                                <Pencil className="mx-auto h-4 w-4" />
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => requestDelete(entry)}
-                                className="min-h-10 min-w-10 rounded-lg p-2 text-red-500 transition hover:bg-white hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-200"
-                                aria-label="Delete lesson"
-                              >
-                                <Trash2 className="mx-auto h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 space-y-1.5 text-xs text-slate-600">
-                            <div className="flex items-center gap-2">
-                              <Clock3 className="h-3.5 w-3.5 shrink-0 text-blue-600" />
-                              <span>
-                                {entry.start_time} – {entry.end_time}
-                              </span>
-                            </div>
-
-                            {entry.teacher?.name && (
-                              <div className="flex min-w-0 items-start gap-2">
-                                <Users className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                <span className="break-words">
-                                  {entry.teacher.name}
-                                </span>
-                              </div>
-                            )}
-
-                            {entry.room && (
-                              <div className="flex min-w-0 items-start gap-2">
-                                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                <span className="break-words">
-                                  {entry.room}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-
           <div className="hidden overflow-x-auto md:block">
             <div className="min-w-[1180px]">
               {/* Day headers */}
@@ -1297,6 +1304,68 @@ function AdminTimetableEditor() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          DELETE TIMETABLE CONFIRMATION
+      ========================================================== */}
+      {deleteTimetableOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-4">
+          <div
+            className="w-full max-w-md rounded-2xl bg-white shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-timetable-title"
+          >
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-100">
+                  <Trash2 className="h-5 w-5 text-red-600" />
+                </div>
+
+                <div className="min-w-0">
+                  <h2
+                    id="delete-timetable-title"
+                    className="text-lg font-semibold text-slate-900"
+                  >
+                    Delete timetable?
+                  </h2>
+
+                  <p className="mt-2 break-words text-sm leading-6 text-slate-600">
+                    Are you sure you want to delete{" "}
+                    <span className="font-semibold text-slate-900">
+                      {timetable.name}
+                    </span>
+                    ? This will permanently delete the timetable and all of its scheduled lessons.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTimetableOpen(false)}
+                  disabled={deletingTimetable}
+                  className="min-h-11 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={confirmDeleteTimetable}
+                  disabled={deletingTimetable}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deletingTimetable
+                    ? "Deleting..."
+                    : "Delete Timetable"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
