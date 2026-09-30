@@ -85,7 +85,52 @@ export default function Staff() {
 
       {error && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>}
 
-      <div className="overflow-x-auto">
+      <div className="space-y-3 md:hidden">
+        {staff.map((s) => {
+          const isSelf = s.id === currentUser.id;
+          return (
+            <article key={s.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-900 break-words">
+                  {s.name}
+                  {isSelf && <span className="ml-1 text-xs text-slate-400">(you)</span>}
+                </p>
+                <p className="mt-1 break-all text-sm text-slate-500">{s.email}</p>
+              </div>
+
+              <div className="mt-4">
+                <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Role
+                </label>
+                <select
+                  value={s.role}
+                  disabled={isSelf}
+                  onChange={(e) => handleRoleChange(s.id, s.name, e.target.value)}
+                  className="min-h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
+                >
+                  {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+              </div>
+
+              {!isSelf && (
+                <button
+                  onClick={() => handleDelete(s.id, s.name)}
+                  className="mt-3 min-h-10 w-full rounded-md border border-red-100 px-3 py-2 text-left text-sm font-medium text-red-600"
+                >
+                  Delete
+                </button>
+              )}
+            </article>
+          );
+        })}
+        {staff.length === 0 && (
+          <div className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
+            No staff accounts found.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
           <thead className="bg-slate-100 text-slate-600 text-left">
             <tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Email</th><th className="px-3 py-2">Role</th><th className="px-3 py-2"></th></tr>

@@ -59,6 +59,8 @@ import TeacherSchemes from "./pages/teacher/TeacherSchemes";
 import TeacherSchemeDetail from "./pages/teacher/TeacherSchemeDetail";
 import TeacherPlanningCalendar from "./pages/teacher/TeacherPlanningCalendar";
 import TeacherTimetable from "./pages/teacher/TeacherTimetable";
+import TeacherAssignments from "./pages/teacher/TeacherAssignments";
+import TeacherReports from "./pages/teacher/TeacherReports";
 import AdminTimetable from "./pages/AdminTimetable";
 import AdminTimetableEditor from "./pages/AdminTimetableEditor";
 import Notifications from "./pages/Notifications";
@@ -371,6 +373,16 @@ export default function App() {
               element={teacherWorkspace(<TeacherAssessments />)}
             />
             
+            <Route
+              path="/teacher/assignments"
+              element={teacherWorkspace(<TeacherAssignments />)}
+            />
+
+            <Route
+              path="/teacher/reports"
+              element={teacherWorkspace(<TeacherReports />)}
+            />
+
             <Route
               path="/teacher/lesson-plans"
               element={teacherWorkspace(<TeacherLessonPlans />)}

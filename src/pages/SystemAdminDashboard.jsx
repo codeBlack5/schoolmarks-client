@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import Swal from "sweetalert2";
 
 export default function SystemAdminDashboard() {
   const { isSystemAdmin } = useAuth();
@@ -12,7 +13,12 @@ export default function SystemAdminDashboard() {
 
   // Editing state
   const [editingSchool, setEditingSchool] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
   const [editLogo, setEditLogo] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -37,6 +43,7 @@ export default function SystemAdminDashboard() {
   const filteredSchools = useMemo(() => {
     return schools.filter((s) => {
       const query = search.toLowerCase();
+
       return (
         s.name.toLowerCase().includes(query) ||
         s.email?.toLowerCase().includes(query) ||
@@ -45,29 +52,68 @@ export default function SystemAdminDashboard() {
     });
   }, [schools, search]);
 
-  // Handle Delete School
+  // Delete school with SweetAlert2 confirmation
   const handleDelete = async (school) => {
-    if (!window.confirm(`Are you sure you want to delete "${school.name}"? This action removes all associated data.`)) {
+    const result = await Swal.fire({
+      title: "Delete school?",
+      html: `
+        Are you sure you want to delete
+        <strong>${school.name}</strong>?
+        <br><br>
+        This action is permanent and will remove all tenant records.
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete school",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      focusCancel: true,
+      buttonsStyling: true,
+      customClass: {
+        confirmButton: "swal-delete-confirm",
+        cancelButton: "swal-delete-cancel",
+      },
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
     try {
       await client.delete(`/schools/${school.id}`);
+
       setSchools((prev) => prev.filter((s) => s.id !== school.id));
+
+      await Swal.fire({
+        title: "School deleted",
+        text: `${school.name} has been deleted successfully.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
     } catch (err) {
-      alert(err.response?.data?.error || "Could not delete school");
+      await Swal.fire({
+        title: "Delete failed",
+        text:
+          err.response?.data?.error ||
+          err.response?.data?.errors?.join(", ") ||
+          "Could not delete school.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 
   // Open Edit Modal
   const startEdit = (school) => {
     setEditingSchool(school);
+
     setEditForm({
       name: school.name || "",
       email: school.email || "",
       phone: school.phone || "",
       address: school.address || "",
     });
+
     setEditLogo(null);
   };
 
@@ -78,20 +124,48 @@ export default function SystemAdminDashboard() {
 
     try {
       const formData = new FormData();
+
       formData.append("school[name]", editForm.name);
       formData.append("school[email]", editForm.email);
       formData.append("school[phone]", editForm.phone);
       formData.append("school[address]", editForm.address);
-      if (editLogo) formData.append("school[logo]", editLogo);
 
-      const { data } = await client.patch(`/schools/${editingSchool.id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      if (editLogo) {
+        formData.append("school[logo]", editLogo);
+      }
 
-      setSchools((prev) => prev.map((s) => (s.id === data.id ? data : s)));
+      const { data } = await client.patch(
+        `/schools/${editingSchool.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setSchools((prev) =>
+        prev.map((s) => (s.id === data.id ? data : s))
+      );
+
       setEditingSchool(null);
+
+      await Swal.fire({
+        title: "School updated",
+        text: `${data.name} has been updated successfully.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
     } catch (err) {
-      alert(err.response?.data?.errors?.join(", ") || "Failed to update school");
+      await Swal.fire({
+        title: "Update failed",
+        text:
+          err.response?.data?.errors?.join(", ") ||
+          err.response?.data?.error ||
+          "Failed to update school.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     } finally {
       setSaving(false);
     }
@@ -101,7 +175,10 @@ export default function SystemAdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
         <div className="bg-white p-6 rounded-xl border border-slate-200 text-center max-w-md">
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Access Denied</h2>
+          <h2 className="text-lg font-semibold text-red-600 mb-2">
+            Access Denied
+          </h2>
+
           <p className="text-sm text-slate-600">
             This page is restricted to platform System Admins.
           </p>
@@ -115,13 +192,18 @@ export default function SystemAdminDashboard() {
       {/* Header & Quick Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--color-navy)" }}>
+          <h1
+            className="text-2xl font-bold"
+            style={{ color: "var(--color-navy)" }}
+          >
             System Administration
           </h1>
+
           <p className="text-sm text-slate-500">
             Manage all onboarded school tenants across the platform.
           </p>
         </div>
+
         <Link
           to="/schools/new"
           className="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
@@ -137,18 +219,27 @@ export default function SystemAdminDashboard() {
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             Total School Tenants
           </p>
-          <p className="text-3xl font-bold mt-1 text-slate-800">{schools.length}</p>
+
+          <p className="text-3xl font-bold mt-1 text-slate-800">
+            {schools.length}
+          </p>
         </div>
+
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             Filtered View
           </p>
-          <p className="text-3xl font-bold mt-1 text-slate-800">{filteredSchools.length}</p>
+
+          <p className="text-3xl font-bold mt-1 text-slate-800">
+            {filteredSchools.length}
+          </p>
         </div>
+
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             System Status
           </p>
+
           <span className="inline-block mt-2 px-2.5 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">
             Active Multi-Tenancy
           </span>
@@ -164,6 +255,7 @@ export default function SystemAdminDashboard() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full text-sm border border-slate-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-slate-400"
         />
+
         {search && (
           <button
             onClick={() => setSearch("")}
@@ -181,70 +273,166 @@ export default function SystemAdminDashboard() {
         </div>
       )}
 
-      {/* Schools Table */}
+      {/* Schools */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-500 text-sm">Loading schools...</div>
+          <div className="p-8 text-center text-slate-500 text-sm">
+            Loading schools...
+          </div>
         ) : filteredSchools.length === 0 ? (
           <div className="p-8 text-center text-slate-500 text-sm">
-            No school tenants found {search ? `matching "${search}"` : ""}.
+            No school tenants found{" "}
+            {search ? `matching "${search}"` : ""}.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-600 font-medium border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-3">School</th>
-                  <th className="px-4 py-3">Contact Email</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Address</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredSchools.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-800">
-                      <div className="flex items-center gap-3">
-                        {s.logo_url ? (
-                          <img
-                            src={s.logo_url}
-                            alt={s.name}
-                            className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                          />
-                        ) : (
-                          <div
-                            className="w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs"
-                            style={{ backgroundColor: "var(--color-navy)" }}
-                          >
-                            {s.name.substring(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <span>{s.name}</span>
+          <>
+            {/* Mobile school cards */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {filteredSchools.map((s) => (
+                <div key={s.id} className="p-4 space-y-4">
+                  <div className="flex items-start gap-3">
+                    {s.logo_url ? (
+                      <img
+                        src={s.logo_url}
+                        alt={s.name}
+                        className="w-10 h-10 shrink-0 rounded-full object-cover border border-slate-200"
+                      />
+                    ) : (
+                      <div
+                        className="w-10 h-10 shrink-0 rounded-full text-white font-bold flex items-center justify-center text-xs"
+                        style={{ backgroundColor: "var(--color-navy)" }}
+                      >
+                        {s.name.substring(0, 2).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{s.email || "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{s.phone || "—"}</td>
-                    <td className="px-4 py-3 text-slate-600 truncate max-w-xs">{s.address || "—"}</td>
-                    <td className="px-4 py-3 text-right space-x-3">
-                      <button
-                        onClick={() => startEdit(s)}
-                        className="text-xs font-semibold underline text-slate-600 hover:text-slate-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(s)}
-                        className="text-xs font-semibold underline text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-800 break-words">
+                        {s.name}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-600 break-all">
+                        {s.email || "No email"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 text-sm">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        Phone
+                      </p>
+
+                      <p className="text-slate-600 break-words">
+                        {s.phone || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        Address
+                      </p>
+
+                      <p className="text-slate-600 break-words">
+                        {s.address || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => startEdit(s)}
+                      className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(s)}
+                      className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop school table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-600 font-medium border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3">School</th>
+                    <th className="px-4 py-3">Contact Email</th>
+                    <th className="px-4 py-3">Phone</th>
+                    <th className="px-4 py-3">Address</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100">
+                  {filteredSchools.map((s) => (
+                    <tr
+                      key={s.id}
+                      className="hover:bg-slate-50/80 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        <div className="flex items-center gap-3">
+                          {s.logo_url ? (
+                            <img
+                              src={s.logo_url}
+                              alt={s.name}
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                            />
+                          ) : (
+                            <div
+                              className="w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs"
+                              style={{
+                                backgroundColor: "var(--color-navy)",
+                              }}
+                            >
+                              {s.name.substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+
+                          <span>{s.name}</span>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-600">
+                        {s.email || "—"}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-600">
+                        {s.phone || "—"}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-600 truncate max-w-xs">
+                        {s.address || "—"}
+                      </td>
+
+                      <td className="px-4 py-3 text-right space-x-3">
+                        <button
+                          onClick={() => startEdit(s)}
+                          className="text-xs font-semibold underline text-slate-600 hover:text-slate-900"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(s)}
+                          className="text-xs font-semibold underline text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -252,56 +440,97 @@ export default function SystemAdminDashboard() {
       {editingSchool && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg p-6 space-y-4">
-            <h2 className="text-lg font-semibold" style={{ color: "var(--color-navy)" }}>
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: "var(--color-navy)" }}
+            >
               Edit {editingSchool.name}
             </h2>
 
             <form onSubmit={handleUpdate} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">School Name</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  School Name
+                </label>
+
                 <input
                   required
                   value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      name: e.target.value,
+                    })
+                  }
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    Email
+                  </label>
+
                   <input
                     type="email"
                     value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        email: e.target.value,
+                      })
+                    }
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    Phone
+                  </label>
+
                   <input
                     value={editForm.phone}
-                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        phone: e.target.value,
+                      })
+                    }
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Address</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Address
+                </label>
+
                 <input
                   value={editForm.address}
-                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      address: e.target.value,
+                    })
+                  }
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Update Logo</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Update Logo
+                </label>
+
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setEditLogo(e.target.files[0] || null)}
+                  onChange={(e) =>
+                    setEditLogo(e.target.files[0] || null)
+                  }
                   className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
                 />
               </div>
@@ -314,6 +543,7 @@ export default function SystemAdminDashboard() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   disabled={saving}

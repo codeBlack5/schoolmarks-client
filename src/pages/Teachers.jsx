@@ -77,7 +77,38 @@ export default function Teachers() {
 
       {error && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>}
 
-      <div className="overflow-x-auto">
+      <div className="space-y-3 md:hidden">
+        {teachers.map((t) => (
+          <article key={t.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="min-w-0">
+              <p className="font-medium text-slate-900 break-words">{t.name}</p>
+              <p className="mt-1 break-all text-sm text-slate-500">{t.email}</p>
+            </div>
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                onClick={() => handlePromote(t.id, t.name)}
+                className="min-h-10 rounded-md border border-slate-200 px-3 py-2 text-left text-sm font-medium"
+                style={{ color: "var(--color-gold)" }}
+              >
+                Promote to Admin
+              </button>
+              <button
+                onClick={() => handleDelete(t.id, t.name)}
+                className="min-h-10 rounded-md border border-red-100 px-3 py-2 text-left text-sm font-medium text-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        ))}
+        {teachers.length === 0 && (
+          <div className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
+            No teachers found.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
           <thead className="bg-slate-100 text-slate-600 text-left">
             <tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Email</th><th className="px-3 py-2"></th></tr>

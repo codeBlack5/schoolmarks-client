@@ -82,7 +82,33 @@ export default function Assignments() {
 
           {error && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>}
 
-          <div className="overflow-x-auto">
+          <div className="space-y-3 md:hidden">
+            {assignments.map((a) => (
+              <article key={a.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Grade</p>
+                  <p className="mt-1 font-medium text-slate-900 break-words">{a.subject?.grade?.name || "—"}</p>
+                </div>
+                <div className="mt-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Subject</p>
+                  <p className="mt-1 text-sm text-slate-700 break-words">{a.subject?.name || "—"}</p>
+                </div>
+                <button
+                  onClick={() => handleRemove(a.id)}
+                  className="mt-4 min-h-10 w-full rounded-md border border-red-100 px-3 py-2 text-left text-sm font-medium text-red-600"
+                >
+                  Remove Assignment
+                </button>
+              </article>
+            ))}
+            {assignments.length === 0 && (
+              <div className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
+                No assignments found.
+              </div>
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-100 text-slate-600 text-left">
                 <tr><th className="px-3 py-2">Grade</th><th className="px-3 py-2">Subject</th><th className="px-3 py-2"></th></tr>
@@ -92,7 +118,7 @@ export default function Assignments() {
                   <tr key={a.id} className="border-t border-slate-100">
                     <td className="px-3 py-2">{a.subject?.grade?.name}</td>
                     <td className="px-3 py-2">{a.subject?.name}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <button onClick={() => handleRemove(a.id)} className="underline text-red-600">Remove</button>
                     </td>
                   </tr>
