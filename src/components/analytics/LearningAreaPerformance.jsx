@@ -225,7 +225,7 @@ export default function LearningAreaPerformance({ learningAreas = [] }) {
             Strongest learning area:
           </span>{" "}
           {sortedLearningAreas[0]?.subject_name} with a mean score of{" "}
-          {formatScore(sortedLearningAreas[0]?.mean_score)}%.
+          {formatScore(sortedLearningAreas[0]?.mean_score)}.
           {highestMean >= 50
             ? " This is above the 50% Meeting Expectations target."
             : " This is currently below the 50% Meeting Expectations target."}

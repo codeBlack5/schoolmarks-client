@@ -1,44 +1,97 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import client from "../api/client";
 
 export function useTeacherAnalytics({
   termId,
   gradeId = null,
   subjectId = null,
+  assessmentType = null,
 }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
 
+  const cacheRef = useRef(new Map());
+  const requestRef = useRef(null);
+
+  const buildParams = useCallback(() => {
+    const params = {
+      term_id: termId,
+    };
+
+    if (gradeId) {
+      params.grade_id = gradeId;
+    }
+
+    if (subjectId) {
+      params.subject_id = subjectId;
+    }
+
+    if (assessmentType) {
+      params.assessment_type = assessmentType;
+    }
+
+    return params;
+  }, [termId, gradeId, subjectId, assessmentType]);
+
+  const buildCacheKey = useCallback(() => {
+    return JSON.stringify({
+      termId: termId || null,
+      gradeId: gradeId || null,
+      subjectId: subjectId || null,
+      assessmentType: assessmentType || null,
+    });
+  }, [termId, gradeId, subjectId, assessmentType]);
+
   const fetchAnalytics = useCallback(async () => {
     if (!termId) {
+      if (requestRef.current) {
+        requestRef.current.abort();
+        requestRef.current = null;
+      }
+
       setData(null);
+      setLoading(false);
+      setError(null);
       return;
     }
+
+    const cacheKey = buildCacheKey();
+    const cachedData = cacheRef.current.get(cacheKey);
+
+    if (cachedData) {
+      setData(cachedData);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    if (requestRef.current) {
+      requestRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    requestRef.current = controller;
 
     setLoading(true);
     setError(null);
 
     try {
-      const params = {
-        term_id: termId,
-      };
-
-      if (gradeId) {
-        params.grade_id = gradeId;
-      }
-
-      if (subjectId) {
-        params.subject_id = subjectId;
-      }
-
       const response = await client.get("/teacher_analytics", {
-        params,
+        params: buildParams(),
+        signal: controller.signal,
       });
 
-      setData(response.data.data);
+      const analyticsData = response.data.data;
+
+      cacheRef.current.set(cacheKey, analyticsData);
+      setData(analyticsData);
     } catch (err) {
+      if (controller.signal.aborted) {
+        return;
+      }
+
       console.error("Failed to load teacher analytics:", err);
 
       setError(
@@ -46,12 +99,13 @@ export function useTeacherAnalytics({
           err.response?.data?.errors?.join(", ") ||
           "Failed to load teacher analytics."
       );
-
-      setData(null);
     } finally {
-      setLoading(false);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setLoading(false);
+      }
     }
-  }, [termId, gradeId, subjectId]);
+  }, [termId, buildParams, buildCacheKey]);
 
   const exportPdf = useCallback(async () => {
     if (!termId) {
@@ -61,20 +115,8 @@ export function useTeacherAnalytics({
     setExporting(true);
 
     try {
-      const params = {
-        term_id: termId,
-      };
-
-      if (gradeId) {
-        params.grade_id = gradeId;
-      }
-
-      if (subjectId) {
-        params.subject_id = subjectId;
-      }
-
       const response = await client.get("/teacher_analytics/export", {
-        params,
+        params: buildParams(),
         responseType: "blob",
       });
 
@@ -117,11 +159,19 @@ export function useTeacherAnalytics({
     } finally {
       setExporting(false);
     }
-  }, [termId, gradeId, subjectId]);
+  }, [termId, buildParams]);
 
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
+
+  useEffect(() => {
+    return () => {
+      if (requestRef.current) {
+        requestRef.current.abort();
+      }
+    };
+  }, []);
 
   return {
     data,

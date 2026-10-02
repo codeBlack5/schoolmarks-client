@@ -9,7 +9,6 @@ import PerformanceDistribution from "../components/analytics/PerformanceDistribu
 import StudentPerformanceRanking from "../components/analytics/StudentPerformanceRanking";
 import StudentIntervention from "../components/analytics/StudentIntervention";
 
-
 export default function TeacherAnalytics() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -17,13 +16,15 @@ export default function TeacherAnalytics() {
   const urlTermId = searchParams.get("term_id");
   const urlGradeId = searchParams.get("grade_id");
   const urlSubjectId = searchParams.get("subject_id");
+  const urlAssessmentType = searchParams.get("assessment_type");
+
   const isAdminLevel = [
-  "admin",
-  "headteacher",
-  "deputy",
-  "dos",
-].includes(user?.role);
-  
+    "admin",
+    "headteacher",
+    "deputy",
+    "dos",
+  ].includes(user?.role);
+
   const [terms, setTerms] = useState([]);
   const [grades, setGrades] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -32,6 +33,7 @@ export default function TeacherAnalytics() {
   const [termId, setTermId] = useState("");
   const [gradeId, setGradeId] = useState("");
   const [subjectId, setSubjectId] = useState("");
+  const [assessmentType, setAssessmentType] = useState("");
 
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState("");
@@ -47,6 +49,7 @@ export default function TeacherAnalytics() {
     termId,
     gradeId,
     subjectId,
+    assessmentType,
   });
 
   // Load teacher workspace filter data.
@@ -56,14 +59,10 @@ export default function TeacherAnalytics() {
       setFiltersError("");
 
       try {
-        const requests = [
-          client.get("/terms"),
-        ];
+        const requests = [client.get("/terms")];
 
         if (isAdminLevel) {
-          requests.push(
-            client.get("/grades")
-          );
+          requests.push(client.get("/grades"));
         } else {
           requests.push(
             client.get("/teacher/classes"),
@@ -86,8 +85,8 @@ export default function TeacherAnalytics() {
           : gradesResponse.data?.classes || [];
 
         const loadedSubjects = isAdminLevel
-        ? []
-        : subjectsResponse.data?.subjects || [];
+          ? []
+          : subjectsResponse.data?.subjects || [];
 
         setTerms(loadedTerms);
         setGrades(loadedGrades);
@@ -115,8 +114,24 @@ export default function TeacherAnalytics() {
         if (urlGradeId) {
           setGradeId(String(urlGradeId));
         }
+
+        const validAssessmentTypes = [
+          "opener",
+          "mid_term",
+          "cat",
+          "end_term",
+        ];
+
+        if (validAssessmentTypes.includes(urlAssessmentType)) {
+          setAssessmentType(urlAssessmentType);
+        } else {
+          setAssessmentType("");
+        }
       } catch (err) {
-        console.error("Failed to load analytics filters:", err);
+        console.error(
+          "Failed to load analytics filters:",
+          err
+        );
 
         setFiltersError(
           err.response?.data?.errors?.join(", ") ||
@@ -129,7 +144,7 @@ export default function TeacherAnalytics() {
     }
 
     loadFilters();
-  }, [isAdminLevel]);
+  }, [isAdminLevel, urlTermId, urlGradeId, urlAssessmentType]);
 
   // Load subjects available within the selected teacher workspace grade.
   useEffect(() => {
@@ -205,19 +220,39 @@ export default function TeacherAnalytics() {
   ]);
 
   const selectedTerm = useMemo(
-    () => terms.find((term) => String(term.id) === String(termId)),
+    () =>
+      terms.find(
+        (term) => String(term.id) === String(termId)
+      ),
     [terms, termId]
   );
 
   const selectedGrade = useMemo(
-    () => grades.find((grade) => String(grade.id) === String(gradeId)),
+    () =>
+      grades.find(
+        (grade) => String(grade.id) === String(gradeId)
+      ),
     [grades, gradeId]
   );
 
   const selectedSubject = useMemo(
-    () => subjects.find((subject) => String(subject.id) === String(subjectId)),
+    () =>
+      subjects.find(
+        (subject) => String(subject.id) === String(subjectId)
+      ),
     [subjects, subjectId]
   );
+
+  const selectedAssessmentType = useMemo(() => {
+    const labels = {
+      opener: "Opener",
+      mid_term: "Mid-Term",
+      cat: "CAT",
+      end_term: "End-Term",
+    };
+
+    return labels[assessmentType] || "";
+  }, [assessmentType]);
 
   function handleGradeChange(event) {
     setGradeId(event.target.value);
@@ -227,6 +262,7 @@ export default function TeacherAnalytics() {
   function handleReset() {
     setGradeId("");
     setSubjectId("");
+    setAssessmentType("");
   }
 
   if (filtersLoading) {
@@ -243,31 +279,31 @@ export default function TeacherAnalytics() {
     <div className="mx-auto w-full min-w-0 max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 space-y-5 sm:space-y-6">
       {/* Page heading */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
-          Teacher Analytics
-        </h1>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+            Teacher Analytics
+          </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Analyse learner performance across learning areas and assessments.
-        </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Analyse learner performance across learning areas and assessments.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await exportPdf();
+            } catch (err) {
+              alert(err.message);
+            }
+          }}
+          disabled={!termId || analyticsLoading || exporting}
+          className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {exporting ? "Generating PDF..." : "Download PDF"}
+        </button>
       </div>
-
-      <button
-        type="button"
-        onClick={async () => {
-          try {
-            await exportPdf();
-          } catch (err) {
-            alert(err.message);
-          }
-        }}
-        disabled={!termId || analyticsLoading || exporting}
-        className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {exporting ? "Generating PDF..." : "Download PDF"}
-      </button>
-    </div>
 
       {/* Filter error */}
       {filtersError && (
@@ -278,12 +314,13 @@ export default function TeacherAnalytics() {
 
       {/* Filters */}
       <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-800">
               Analysis filters
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+
+            <p className="mt-1 text-xs text-slate-500">
               Select the scope you want to analyse.
             </p>
           </div>
@@ -291,16 +328,16 @@ export default function TeacherAnalytics() {
           <button
             type="button"
             onClick={handleReset}
-            className="min-h-10 px-2 text-xs font-medium text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200 rounded-md"
+            className="min-h-10 rounded-md px-2 text-xs font-medium text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200"
           >
             Clear filters
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Term */}
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-600">
               Term
             </label>
 
@@ -321,14 +358,14 @@ export default function TeacherAnalytics() {
 
           {/* Grade */}
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-600">
               Grade / Class
             </label>
 
             <select
               value={gradeId}
               onChange={handleGradeChange}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+              className="min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
               <option value="">
                 {isAdminLevel ? "All grades" : "All my classes"}
@@ -344,7 +381,7 @@ export default function TeacherAnalytics() {
 
           {/* Subject */}
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-600">
               Learning Area
             </label>
 
@@ -369,11 +406,32 @@ export default function TeacherAnalytics() {
               ))}
             </select>
           </div>
+
+          {/* Assessment Type */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Assessment Type
+            </label>
+
+            <select
+              value={assessmentType}
+              onChange={(event) =>
+                setAssessmentType(event.target.value)
+              }
+              className="min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+            >
+              <option value="">All Assessments</option>
+              <option value="opener">Opener</option>
+              <option value="mid_term">Mid-Term</option>
+              <option value="cat">CAT</option>
+              <option value="end_term">End-Term</option>
+            </select>
+          </div>
         </div>
 
         {/* Active scope */}
         {termId && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-2 text-xs">
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4 text-xs">
             {selectedTerm && (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
                 {selectedTerm.name} {selectedTerm.year}
@@ -389,6 +447,12 @@ export default function TeacherAnalytics() {
             {selectedSubject && (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
                 {selectedSubject.name}
+              </span>
+            )}
+
+            {selectedAssessmentType && (
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+                {selectedAssessmentType}
               </span>
             )}
           </div>
@@ -408,12 +472,15 @@ export default function TeacherAnalytics() {
           <p className="text-sm font-medium text-red-800">
             Could not load analytics
           </p>
-          <p className="mt-1 text-sm text-red-700">{analyticsError}</p>
+
+          <p className="mt-1 text-sm text-red-700">
+            {analyticsError}
+          </p>
 
           <button
             type="button"
             onClick={refetch}
-            className="mt-3 inline-flex min-h-10 w-full sm:w-auto items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-slate-300"
+            className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-slate-300 sm:w-auto"
             style={{ backgroundColor: "var(--color-navy)" }}
           >
             Try again
@@ -423,7 +490,7 @@ export default function TeacherAnalytics() {
 
       {/* Empty state */}
       {!analyticsLoading && !analyticsError && !data && termId && (
-        <div className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8 text-center">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-center sm:p-8">
           <p className="text-sm text-slate-500">
             No analytics data is available for the selected term.
           </p>
@@ -442,7 +509,7 @@ export default function TeacherAnalytics() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <MetricCard
               label="Students"
               value={data.overview.students ?? 0}
@@ -502,7 +569,7 @@ export default function TeacherAnalytics() {
         </section>
       )}
 
-      {/* Temporary data check */}
+      {/* Analytics */}
       {!analyticsLoading && !analyticsError && data && (
         <div className="space-y-6">
           <LearningAreaPerformance
@@ -523,9 +590,9 @@ export default function TeacherAnalytics() {
           />
 
           <StudentIntervention
-            decliningStudents={data.declining_students || [] }
-            interventionStudents={data.intervention_students || [] }
-          />  
+            decliningStudents={data.declining_students || []}
+            interventionStudents={data.intervention_students || []}
+          />
         </div>
       )}
     </div>
@@ -535,21 +602,16 @@ export default function TeacherAnalytics() {
 function MetricCard({ label, value }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="text-xs font-medium text-slate-500">
+        {label}
+      </p>
+
       <p
-        className="mt-2 text-xl sm:text-2xl font-semibold"
+        className="mt-2 text-xl font-semibold sm:text-2xl"
         style={{ color: "var(--color-navy)" }}
       >
         {value}
       </p>
     </div>
-  );
-}
-
-function StatusPill({ label, count }) {
-  return (
-    <span className="rounded-full bg-white border border-slate-200 px-3 py-1 text-slate-600">
-      {label}: <strong>{count}</strong>
-    </span>
   );
 }
