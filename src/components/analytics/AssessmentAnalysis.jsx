@@ -36,20 +36,27 @@ export default function AssessmentAnalysis({ assessments = [] }) {
     return dateA - dateB;
   });
 
-  const means = orderedAssessments
-    .map((assessment) => Number(assessment.mean_score))
-    .filter((score) => !Number.isNaN(score));
+  const assessedResults = orderedAssessments.filter((assessment) => {
+    if (assessment.mean_score == null || assessment.mean_score === "") {
+      return false;
+    }
+
+    const score = Number(assessment.mean_score);
+    return Number.isFinite(score);
+  });
+
+  const means = assessedResults.map((assessment) => Number(assessment.mean_score));
 
   const highestMean = means.length ? Math.max(...means) : null;
   const lowestMean = means.length ? Math.min(...means) : null;
 
   const highestAssessment =
-    orderedAssessments.find(
+    assessedResults.find(
       (assessment) => Number(assessment.mean_score) === highestMean
     ) || null;
 
   const lowestAssessment =
-    orderedAssessments.find(
+    assessedResults.find(
       (assessment) => Number(assessment.mean_score) === lowestMean
     ) || null;
 
@@ -375,19 +382,30 @@ function formatAssessmentType(type) {
 }
 
 function buildInsight(highest, lowest) {
-  if (!highest && !lowest) {
-    return "There is not enough assessment data to provide an insight.";
+  if (!highest || !lowest) {
+    return "No marks recorded for the selected assessments.";
   }
 
-  if (highest?.assessment_id === lowest?.assessment_id) {
-    return `${highest.name} currently has a mean score of ${formatScore(
+  const highestLabel = assessmentLabel(highest);
+  const lowestLabel = assessmentLabel(lowest);
+
+  if (highest.assessment_id === lowest.assessment_id) {
+    return `${highestLabel} recorded the highest and lowest available mean score at ${formatScore(
       highest.mean_score
     )}.`;
   }
 
-  return `${highest.name} recorded the highest mean score at ${formatScore(
+  return `${highestLabel} recorded the highest available mean score at ${formatScore(
     highest.mean_score
-  )}, while ${lowest.name} recorded the lowest at ${formatScore(
+  )}, while ${lowestLabel} recorded the lowest at ${formatScore(
     lowest.mean_score
   )}.`;
+}
+
+function assessmentLabel(assessment) {
+  const parts = [assessment.subject_name, assessment.name].filter(Boolean);
+
+  return parts.length
+    ? parts.join(" — ")
+    : "The selected assessment";
 }
