@@ -1,5 +1,5 @@
 // src/context/AuthContext.jsx
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import client from "../api/client";
 
 const AuthContext = createContext(null);
@@ -13,21 +13,103 @@ const TEACHER_WORKSPACE_ROLES = [
   "dos",
 ];
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("user");
+function readStoredJson(key) {
+  try {
+    const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : null;
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
+function readStoredTenant() {
+  const tenant = readStoredJson("inspect_school");
+  const tenantId = Number(localStorage.getItem("inspect_school_id"));
+
+  if (
+    !tenant ||
+    !Number.isInteger(tenantId) ||
+    tenantId <= 0 ||
+    Number(tenant.id) !== tenantId
+  ) {
+    localStorage.removeItem("inspect_school");
+    localStorage.removeItem("inspect_school_id");
+    localStorage.removeItem("active_tenant_id");
+    localStorage.removeItem("activeTenantId");
+    return null;
+  }
+
+  return tenant;
+}
+
+export function AuthProvider({ children }) {
+  const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState(() => {
+    return readStoredJson("user");
   });
 
   const [school, setSchool] = useState(() => {
-    const stored = localStorage.getItem("school");
-    return stored ? JSON.parse(stored) : null;
+    return readStoredJson("school");
   });
 
   const [activeTenant, setActiveTenant] = useState(() => {
-    const saved = localStorage.getItem("inspect_school");
-    return saved ? JSON.parse(saved) : null;
+    return readStoredTenant();
   });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function validateSession() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      try {
+        const { data } = await client.get("/auth/me");
+
+        if (cancelled) return;
+
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setUser(data.user);
+
+        if (data.school) {
+          localStorage.setItem("school", JSON.stringify(data.school));
+          setSchool(data.school);
+        } else {
+          localStorage.removeItem("school");
+          setSchool(null);
+        }
+      } catch (error) {
+        if (!cancelled && error.response?.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("school");
+          localStorage.removeItem("school_id");
+          localStorage.removeItem("inspect_school");
+          localStorage.removeItem("inspect_school_id");
+          localStorage.removeItem("active_tenant_id");
+          localStorage.removeItem("activeTenantId");
+
+          setUser(null);
+          setSchool(null);
+          setActiveTenant(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function setSession(token, sessionUser, sessionSchool) {
     localStorage.setItem("token", token);
@@ -57,7 +139,9 @@ export function AuthProvider({ children }) {
       localStorage.removeItem("inspect_school");
       localStorage.removeItem("inspect_school_id");
       localStorage.removeItem("active_tenant_id");
-      
+      localStorage.removeItem("activeTenantId");
+      localStorage.removeItem("school_id");
+
       setUser(null);
       setSchool(null);
       setActiveTenant(null);
@@ -79,10 +163,21 @@ export function AuthProvider({ children }) {
 
   const switchTenant = (targetSchool) => {
     if (targetSchool) {
-      localStorage.setItem("inspect_school_id", targetSchool.id);
-      localStorage.setItem("active_tenant_id", targetSchool.id);
-      localStorage.setItem("inspect_school", JSON.stringify(targetSchool));
-      setActiveTenant(targetSchool);
+      const tenantId = Number(targetSchool.id);
+
+      if (!Number.isInteger(tenantId) || tenantId <= 0) {
+        return;
+      }
+
+      const normalizedSchool = {
+        ...targetSchool,
+        id: tenantId,
+      };
+
+      localStorage.setItem("inspect_school_id", String(tenantId));
+      localStorage.setItem("active_tenant_id", String(tenantId));
+      localStorage.setItem("inspect_school", JSON.stringify(normalizedSchool));
+      setActiveTenant(normalizedSchool);
     } else {
       localStorage.removeItem("inspect_school_id");
       localStorage.removeItem("active_tenant_id");
@@ -107,6 +202,7 @@ export function AuthProvider({ children }) {
         switchTenant,
         updateStoredUser,
         setSession,
+        loading,
       }}
     >
       {children}
