@@ -32,7 +32,10 @@ client.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("school");
       localStorage.removeItem("school_id");
+      localStorage.removeItem("inspect_school");
+      localStorage.removeItem("inspect_school_id");
       localStorage.removeItem("active_tenant_id");
       localStorage.removeItem("activeTenantId");
       window.location.href = "/login";
